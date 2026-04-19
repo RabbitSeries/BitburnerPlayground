@@ -1,0 +1,41 @@
+{
+	"files": [],
+	"include": [],
+	"compilerOptions": {
+		// Emit options
+		"target": "esnext",
+		"noEmit": true,
+		"outDir": "dist/tsc",
+		// Projects options (Incremental... options)
+		"composite": true,
+		// JavaScript Support
+		"allowJs": true,
+		// Modules
+		"module": "esnext",
+		"moduleResolution": "bundler",
+		// Interop Constraints
+		"esModuleInterop": true,
+		"verbatimModuleSyntax": true,
+		// "erasableSyntaxOnly": true, // error on enum, namespaces and modules with runtime code, parameter properties, Non-ECMAScript import = and export = assignments
+		// Type Checking
+		"strict": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"noFallthroughCasesInSwitch": true,
+		"noUncheckedSideEffectImports": true,
+		"noImplicitThis": true,
+		// Editor Support
+		"disableSizeLimit": true,
+		// Completeness
+		"skipLibCheck": true,
+		"sourceMap": true,
+	},
+	"references": [
+		{
+			"path": "./tsconfig.external.json"
+		},
+		{
+			"path": "./tsconfig.game.json"
+		}
+	]
+}

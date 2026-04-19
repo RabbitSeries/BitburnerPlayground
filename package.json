@@ -1,0 +1,33 @@
+{
+	"author": "RabbitSeries, based on work by hydroflame, Hoekstraa, based on work by SlyCedix",
+	"devDependencies": {
+		"@eslint/js": "^9.39.4",
+		"@types/node": "^25.6.0",
+		"@types/react": "^19.2.14",
+		"@types/react-dom": "^19.2.3",
+		"@types/ws": "^8.18.1",
+		"chokidar": "^5.0.0",
+		"concurrently": "^9.2.1",
+		"esbuild": "^0.28.0",
+		"eslint": "^9.39.4",
+		"eslint-plugin-react-hooks": "^7.0.1",
+		"eslint-plugin-react-refresh": "^0.5.2",
+		"fast-glob": "^3.3.3",
+		"globals": "^17.5.0",
+		"jiti": "^2.6.1",
+		"prettier": "^3.8.3",
+		"typescript": "^6.0.2",
+		"typescript-eslint": "^8.58.2",
+		"ws": "^8.20.0",
+		"zod": "^4.3.6"
+	},
+	"name": "bitburner-aux",
+	"scripts": {
+		"lint": "tsc -b && eslint .",
+		"watch": "npm run watch:init  && npm run watch:watch",
+		"watch:init": "esbuild esbuild.ts ./ws/**/*.ts --tsconfig=tsconfig.external.json --format=esm --platform=node --outdir=dist/aux --sourcemap=inline",
+		"watch:watch": "node ./dist/aux/esbuild.js"
+	},
+	"type": "module",
+	"version": "0.1.0"
+}

@@ -1,0 +1,24 @@
+{
+    "include": [
+        "NetscriptDefinitions.d.ts",
+        "src/**/*"
+    ],
+    "exclude": [
+        "*.md"
+    ],
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        // editor, debugger will read this
+        "sourceRoot": "./src/",
+        // tsc, esbuild will read these
+        "jsx": "react",
+        "paths": {
+            "@ns": [
+                "./NetscriptDefinitions.d.ts"
+            ],
+            "/*": [
+                "./src/*"
+            ]
+        }
+    }
+}

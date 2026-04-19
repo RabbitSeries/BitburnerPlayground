@@ -1,0 +1,31 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Attach to Bitburner",
+            "port": 9222,
+            "request": "attach",
+            "type": "msedge",
+            "webRoot": "D:/Program Files(x86)/Steam/steamapps/common/Bitburner/resources/app/src",
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*"
+            ],
+            "skipFiles": [
+                "node_modules/**"
+            ]
+            // "preLaunchTask": "D:/Program Files (x86)/Steam/steamapps/common/Bitburner/bitburner.exe  --remote-debugging-port=9222"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Local test run",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${file}",
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*"
+            ]
+        }
+    ]
+}

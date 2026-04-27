@@ -1,4 +1,5 @@
 # Pipeline Batching
+
 ```mermaid
 stateDiagram-v2
     [*] --> Init
@@ -14,7 +15,7 @@ stateDiagram-v2
     FlushPipeline: Flush Pipeline
     FlushPipeline_join --> FlushPipeline
     FlushPipeline --> CheckExit
-    
+
     state Weaken{
         ArrangeWeakenTasks: Arrange Weaken Tasks
     }
@@ -23,7 +24,7 @@ stateDiagram-v2
         ArrangeGrowTasks: Arrange Grow Tasks
     }
     ArrangeGrowTasks --> FlushPipeline_join
-    
+
     state HackPipeline{
         ArrangeHackTasks --> WaitAJoinTask
         WaitAJoinTask: Wait A Task to Join

@@ -1,10 +1,6 @@
 {
 	"allowDeletingFiles": true,
-	"allowedFiletypes": [
-		".js",
-		".script",
-		".txt"
-	],
+	"allowedFiletypes": [".js", ".script", ".txt"],
 	"definitionFile": {
 		"location": "NetscriptDefinitions.d.ts",
 		"update": true

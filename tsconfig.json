@@ -28,7 +28,7 @@
 		"disableSizeLimit": true,
 		// Completeness
 		"skipLibCheck": true,
-		"sourceMap": true,
+		"sourceMap": true
 	},
 	"references": [
 		{

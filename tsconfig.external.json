@@ -1,12 +1,8 @@
 {
-	"include": [
-		"esbuild.ts",
-		"eslint.config.ts",
-		"ws/**/*",
-	],
+	"include": ["esbuild.ts", "eslint.config.ts", "ws/**/*"],
 	"extends": "./tsconfig.json",
 	"compilerOptions": {
 		"module": "nodenext",
-		"moduleResolution": "nodenext",
+		"moduleResolution": "nodenext"
 	}
 }

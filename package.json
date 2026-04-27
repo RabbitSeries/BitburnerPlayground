@@ -21,8 +21,10 @@
 		"ws": "^8.20.0",
 		"zod": "^4.3.6"
 	},
-	"name": "bitburner-aux",
+	"name": "bitburner-playground",
 	"scripts": {
+		"format": "prettier --write .",
+		"format:check": "prettier --check .",
 		"lint": "tsc -b && eslint .",
 		"watch": "npm run watch:init  && npm run watch:watch",
 		"watch:init": "esbuild esbuild.ts ./ws/**/*.ts --tsconfig=tsconfig.external.json --format=esm --platform=node --outdir=dist/aux --sourcemap=inline",

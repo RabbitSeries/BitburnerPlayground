@@ -1,4 +1,4 @@
-import { type NS } from "@ns"
+import type { NS } from "@ns"
 import React, { useEffect, useRef } from "react"
 import { FindPathTo, ScanAllServers, TryNuke } from "/Hack/HackHelpers"
 import { upgradeLevelBy, upgradeLevelTo } from "/HacknetBuyer"
@@ -179,7 +179,7 @@ export function Toolbar({
 										threadOptions: Math.floor(
 											(ns.getServerMaxRam("home") -
 												ns.getServerUsedRam("home")) /
-												ns.getScriptRam(MinerPaths.RegularMiner.scriptPath)
+											ns.getScriptRam(MinerPaths.RegularMiner.scriptPath)
 										)
 									}).run()
 								} else if (choice === MinerPaths.SingleTaskMiner.scriptPath) {
@@ -208,8 +208,8 @@ export function Toolbar({
 												ns,
 												targetName,
 												["home"],
-												() => {},
-												() => {},
+												() => { },
+												() => { },
 												stop_token
 											)
 										})
@@ -251,7 +251,7 @@ export function Toolbar({
 						"home",
 						Math.floor(
 							FreeRam.bind(ns)("home") /
-								ns.getScriptRam(MinerPaths.MemSharer.scriptPath)
+							ns.getScriptRam(MinerPaths.MemSharer.scriptPath)
 						)
 					).run()
 				}
@@ -266,7 +266,7 @@ export function Toolbar({
 						ns.killall(host)
 						const thread = Math.floor(
 							FreeRam.bind(ns)(host) /
-								ns.getScriptRam(MinerPaths.MemSharer.scriptPath)
+							ns.getScriptRam(MinerPaths.MemSharer.scriptPath)
 						)
 						new MemSharer(ns, host, thread).run()
 					}

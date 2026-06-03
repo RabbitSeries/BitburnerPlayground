@@ -3,37 +3,38 @@ import type { IMiner, IMinerArgs } from "./IMiner"
 import * as HackHelpers from "/Hack/HackHelpers"
 import { HackTask } from "../HackHelpers"
 import { FreeRam } from "/utils/ServerStat"
-const prefix = "Hack/Scripts/"
+
+type MinerNames = ["RegularMiner", "SingleTaskMiner", "HackMiner", "GrowMiner", "WeakenMiner", "MemSharer"]
+
+export type MinerPathSignatures = {
+	[T in (MinerNames)[number]]: { scriptPath: string }
+}
+
+function pathTo(scriptName: string) {
+	return `Hack/Scripts/${scriptName}`
+}
+
 export const MinerPaths: MinerPathSignatures = {
 	RegularMiner: {
-		scriptPath: prefix + "RegularMiner.js"
+		scriptPath: pathTo("RegularMiner.js")
 	},
 	SingleTaskMiner: {
-		scriptPath: prefix + "SingleTaskMiner.js"
+		scriptPath: pathTo("SingleTaskMiner.js")
 	},
 	HackMiner: {
-		scriptPath: prefix + "HackMiner.js"
+		scriptPath: pathTo("HackMiner.js")
 	},
 	GrowMiner: {
-		scriptPath: prefix + "GrowMiner.js"
+		scriptPath: pathTo("GrowMiner.js")
 	},
 	WeakenMiner: {
-		scriptPath: prefix + "WeakenMiner.js"
+		scriptPath: pathTo("WeakenMiner.js")
 	},
 	MemSharer: {
-		scriptPath: prefix + "MemSharer.js"
+		scriptPath: pathTo("MemSharer.js")
 	}
 }
-type MinerNames =
-	| "RegularMiner"
-	| "SingleTaskMiner"
-	| "HackMiner"
-	| "GrowMiner"
-	| "WeakenMiner"
-	| "MemSharer"
-export type MinerPathSignatures = {
-	[T in MinerNames]: { scriptPath: string }
-}
+
 
 export class RegularMiner implements IMiner {
 	ns: NS

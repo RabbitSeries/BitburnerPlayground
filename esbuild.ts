@@ -1,7 +1,5 @@
 import { type Plugin, context } from "esbuild"
 import glob from "fast-glob"
-import { readFile } from "fs/promises"
-import path from "path"
 import { startWebsocketServer } from "./ws/WebSocket.js"
 // Copied from https://github.com/shyguy1412/esbuild-bitburner-plugin
 // Fool esbuild that there is a react dependencies provide the default
@@ -28,23 +26,6 @@ const reactPlugin: Plugin = {
 	}
 }
 
-const fixTypeOnlyImportsPlugin: Plugin = {
-	name: "fix-type-only-imports",
-	setup(build) {
-		build.onLoad({ filter: /\.ts[x]?$/ }, async (args) => {
-			const contents = await readFile(args.path, "utf8")
-			const fixed = contents.replace(
-				/import\s*\{\s*(type\s+[\w$]+\s*,\s*)*type\s+[\w$]+\s*\}\s*from\s*['"](?:.+?)['"]/g,
-				"// $&"
-			)
-			return {
-				contents: fixed,
-				loader: path.extname(args.path).endsWith("x") ? "tsx" : "ts"
-			}
-		})
-	}
-}
-
 const ctx = await context({
 	target: "esnext",
 	entryPoints: glob.globSync(["./src/**/*"], {
@@ -53,7 +34,7 @@ const ctx = await context({
 	tsconfig: "./tsconfig.game.json", // https://esbuild.github.io/content-types/#tsconfig-json
 	platform: "browser",
 	format: "esm",
-	plugins: [reactPlugin, fixTypeOnlyImportsPlugin],
+	plugins: [reactPlugin],
 	bundle: true,
 	outbase: "./src",
 	outdir: "dist/out",

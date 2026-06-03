@@ -79,16 +79,16 @@ export class FullScheduler implements IMiner {
 			ns.print("Task queue is empty, continue to next round")
 			if (hackCondition) {
 				// My computer sucks, these cat't be logged in 100ms
-				// ns.print(JSON.stringify(threadBoost), ` ${i} `, " ", host, " Waited ", ns.tFormat(Date.now() - begin), " Hypotential wait time ", ns.tFormat(waken2Finish))
+				// ns.print(JSON.stringify(threadBoost), ` ${i} `, " ", host, " Waited ", ns.format.time(Date.now() - begin), " Hypotential wait time ", ns.format.time(waken2Finish))
 				ns.print(
 					`Server ${target} money: `,
-					ns.formatPercent(
+					ns.format.percent(
 						ns.getServerMoneyAvailable(target) / ns.getServerMaxMoney(target)
 					)
 				)
 				ns.print(
 					`Server ${target} sercuritylevel increased: `,
-					ns.formatNumber(
+					ns.format.number(
 						ns.getServerSecurityLevel(target) - ns.getServerMinSecurityLevel(target),
 						2
 					)

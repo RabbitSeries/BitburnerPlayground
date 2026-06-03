@@ -1,6 +1,7 @@
 import type { NS } from "@ns"
 import React, { useEffect, useRef, useState } from "react"
-import { Server } from "/UI/ServerTable/ServerInfo"
+import type { TableHeaderMeta } from "../UI/ServerTable/TableHeaderMeta"
+import { ServerInfoObject } from "/UI/ServerTable/ServerInfo"
 
 export type ServerNode = {
 	name: string
@@ -54,7 +55,7 @@ const RING_CENTERING_FORCE = 0.006
 const RING_DAMPING = 0.94
 const RING_AMBIENT_FORCE = 0.0022
 const FRAME_MS = 1000 / 60
-const MIN_SCALE = 0.45
+const MIN_SCALE = 0.1
 const MAX_SCALE = 2.25
 const ZOOM_STEP = 0.0015
 const CLICK_DRAG_THRESHOLD = 6
@@ -63,22 +64,7 @@ const CELL_STYLE = {
 	borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
 	verticalAlign: "top" as const
 }
-const DETAIL_FIELDS = [
-	"Host",
-	"Root",
-	"HackLevel",
-	"Ports",
-	"Money",
-	"Secrurity",
-	"HackTime",
-	"Growth",
-	"CurrMoneyRate",
-	"PotentialMoneyRate",
-	"RAM",
-	"Contracts",
-	"CORES",
-	"Actions"
-] as const
+
 
 function buildTree(ns: NS): ServerNode {
 	const root: ServerNode = { name: "home", subnodes: [] }
@@ -451,21 +437,10 @@ function findNodeAtPoint(nodes: PositionedNode[], x: number, y: number) {
 }
 
 function renderDetailCell(
-	field: (typeof DETAIL_FIELDS)[number],
+	field: TableHeaderMeta,
 	cell: React.JSX.Element,
-	host: string,
-	ns: NS
+	host: string
 ) {
-	if (field === "HackTime") {
-		return (
-			<td key={`${host}-${field}`} style={CELL_STYLE}>
-				<div>{ns.formatNumber(ns.getHackTime(host) / 1000 / 60, 1)} min hack</div>
-				<div>{ns.formatNumber(ns.getWeakenTime(host) / 1000 / 60, 1)} min weaken</div>
-				<div>{ns.formatNumber(ns.getGrowTime(host) / 1000 / 60, 1)} min grow</div>
-			</td>
-		)
-	}
-
 	return React.cloneElement(cell, {
 		key: `${host}-${field}`,
 		style: {
@@ -617,7 +592,7 @@ function drawScene(
 		ctx.fillStyle = "rgba(185, 199, 216, 0.68)"
 		ctx.font = "10px Consolas"
 		ctx.textAlign = "center"
-		ctx.fillText(`RING ${depth}`, centerX, centerY - orbitRadius - 10)
+		ctx.fillText(`JUMP ${depth}`, centerX, centerY - orbitRadius - 10)
 	}
 
 	ctx.save()
@@ -748,8 +723,8 @@ export function ServerTree(arg: { ns: NS }) {
 
 		const resizeObserver = new ResizeObserver(() => {
 			if (!dragRef.current.active) {
-				const viewportWidth = Math.max(320, viewport.clientWidth)
-				const viewportHeight = Math.max(420, Math.min(680, globalThis.innerHeight * 0.62))
+				const viewportWidth = viewport.clientWidth
+				const viewportHeight = globalThis.innerHeight * 0.62
 				transformRef.current = fitTransform(
 					viewportWidth,
 					viewportHeight,
@@ -923,8 +898,10 @@ export function ServerTree(arg: { ns: NS }) {
 		redrawRef.current()
 	}, [selectedNode])
 
-	const selectedServer = Server(arg.ns, selectedNode, 1)
-	const detailCells = DETAIL_FIELDS.map((field) => selectedServer[field])
+	const selectedServer = ServerInfoObject(arg.ns, 0, selectedNode)
+	const orderedCells = Object.keys(selectedServer)
+		.filter(key => key != "Rank")
+		.map(field => [field, selectedServer[field as TableHeaderMeta]] as [TableHeaderMeta, React.JSX.Element])
 
 	return (
 		<div style={{ display: "grid", gap: "16px" }}>
@@ -1136,12 +1113,11 @@ export function ServerTree(arg: { ns: NS }) {
 										: "#f0b5ac"
 								}}
 							>
-								{detailCells.map((cell, index) =>
+								{orderedCells.map((cell) =>
 									renderDetailCell(
-										DETAIL_FIELDS[index],
-										cell,
-										selectedNode,
-										arg.ns
+										cell[0],
+										cell[1],
+										selectedNode
 									)
 								)}
 							</tr>

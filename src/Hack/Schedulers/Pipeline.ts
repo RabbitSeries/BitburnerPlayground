@@ -20,7 +20,7 @@ export function WeakenCondition(ns: NS, target: string) {
 	return ns.getServerMinSecurityLevel(target) / ns.getServerSecurityLevel(target) <= 0.95
 }
 export function NewServerCondition(ns: NS, ram: number) {
-	return ns.getServerMoneyAvailable("home") >= ns.getPurchasedServerCost(ram)
+	return ns.getServerMoneyAvailable("home") >= ns.cloud.getServerCost(ram)
 }
 type PipelineHost = { host: string; threadBoost: HackThreadBoost; count: number; launched: number }
 type PipelineTask = { pid: number; pipeLineId: number; logicBegin: number; aligned: number }
@@ -39,14 +39,14 @@ export async function Pipeline(
 			ns.print("Pipeline Scheduler: Weakening")
 			await AwaitTasks(
 				ns,
-				ScheduleWeakenTask(ns, servers, target, preHandler, () => {})
+				ScheduleWeakenTask(ns, servers, target, preHandler, () => { })
 			)
 			continue
 		} else if (!hackCondition) {
 			ns.print("Pipeline Scheduler: Growing")
 			await AwaitTasks(
 				ns,
-				ScheduleGrowTask(ns, servers, target, preHandler, () => {})
+				ScheduleGrowTask(ns, servers, target, preHandler, () => { })
 			)
 			continue
 		}
@@ -101,17 +101,17 @@ export async function Pipeline(
 					newTask = true
 					ns.print(`Done pipeline segment on host ${host}, pid ${pid}`)
 					ns.print(
-						`\tThis task was aligned to ${ns.tFormat(fixedAligned - delay, true)}}, ${ns.tFormat(fixedAligned, true)}]`
+						`\tThis task was aligned to ${ns.format.time(fixedAligned - delay, true)}}, ${ns.format.time(fixedAligned, true)}]`
 					)
 					ns.print(
-						`\tTarget Money: ${ns.formatPercent(ns.getServerMoneyAvailable(target) / ns.getServerMaxMoney(target), 1)}`
+						`\tTarget Money: ${ns.format.percent(ns.getServerMoneyAvailable(target) / ns.getServerMaxMoney(target), 1)}`
 					)
 					ns.print(
-						`\tTarget Security: ${ns.formatPercent(ns.getServerMinSecurityLevel(target) / ns.getServerSecurityLevel(target), 1)}`
+						`\tTarget Security: ${ns.format.percent(ns.getServerMinSecurityLevel(target) / ns.getServerSecurityLevel(target), 1)}`
 					)
 				} else {
 					ns.print(
-						`Task is runnning on host ${host}, pid ${pid}, remaining: ${ns.tFormat(now - logicBegin, true)}`
+						`Task is runnning on host ${host}, pid ${pid}, remaining: ${ns.format.time(now - logicBegin, true)}`
 					)
 				}
 			}
@@ -171,9 +171,9 @@ export async function Pipeline(
 				)
 			}
 			ns.print(
-				`\twait: ${ns.tFormat(nextWait, true)}, per segment: ${ns.tFormat(pSegTime, true)}`
+				`\twait: ${ns.format.time(nextWait, true)}, per segment: ${ns.format.time(pSegTime, true)}`
 			)
-			ns.print(`\toffset: ${ns.tFormat(offset, true)}`)
+			ns.print(`\toffset: ${ns.format.time(offset, true)}`)
 			await new Promise((r) => setTimeout(r, pSegTime + offset))
 		}
 		for (const { pipeLineId } of taskQ) {

@@ -1,3 +1,8 @@
+export enum LoggingLevel {
+	Verbose,
+	Error
+}
+
 export type Config = {
 	playground: string
 	port: number
@@ -7,6 +12,7 @@ export type Config = {
 	servers: string[]
 	refreshDefinitionFile: boolean
 	cleanServers: boolean
+	loggingLevel: number
 }
 
 export const config: Config = {
@@ -17,5 +23,6 @@ export const config: Config = {
 	pushAllOnStart: true,
 	servers: ["home"],
 	refreshDefinitionFile: true,
-	cleanServers: true
+	cleanServers: true,
+	loggingLevel: LoggingLevel.Error
 }

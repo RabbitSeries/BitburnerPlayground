@@ -17,7 +17,7 @@ export async function main(ns: NS) {
 	while (hacknet.numNodes() < 30) {
 		const cost = hacknet.getPurchaseNodeCost()
 		const wallet = ns.getServerMoneyAvailable("home")
-		ns.print(`Next node with costs ${ns.formatNumber(cost)}/${ns.formatNumber(wallet)}`)
+		ns.print(`Next node with costs ${ns.format.number(cost)}/${ns.format.number(wallet)}`)
 		while (wallet < cost) {
 			ns.print(`Nodes: ${ns.hacknet.numNodes()}`)
 			const maxLevel = [...Array(ns.hacknet.numNodes())]

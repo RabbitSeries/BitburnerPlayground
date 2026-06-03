@@ -1,13 +1,22 @@
 import type { NS } from "@ns"
-import { CurrMoneyRate, PotentialMoneyRate } from "./ServerStat"
+import { CurrMoneyFlow, PotentialMoneyFlow } from "./ServerStat"
 export type Sorter<T> = (a: T, b: T) => number
+
 export class Comparator<T> {
-	public static comparing<T>(cmp: (a: T) => number) {
-		return Comparator.sortBy<T>((a, b) => cmp(a) - cmp(b))
+	private sortChain: Sorter<T>[]
+	private isReversed: number = 1
+	private constructor(chain: Sorter<T>[], private currentSorter: Sorter<T>) {
+		this.sortChain = [...chain]
 	}
-	public static sortBy<T>(sorter: Sorter<T>): Comparator<T> {
+
+	public static comparing<T>(cmp: (a: T) => number) {
+		return new Comparator<T>([], (a, b) => cmp(a) - cmp(b))
+	}
+
+	public static sortBy<T>(sorter: Sorter<T>) {
 		return new Comparator([], sorter)
 	}
+
 	public compare: Sorter<T> = (a, b) => {
 		for (const sorter of this.sortChain) {
 			const cmp = sorter(a, b)
@@ -15,35 +24,40 @@ export class Comparator<T> {
 				return cmp
 			}
 		}
-		return this.currentSorter(a, b)
+		return this.isReversed * this.currentSorter(a, b)
 	}
+
+	public thenComparing(cmp: (a: T) => number) {
+		return new Comparator([...this.sortChain, this.currentSorter], (a, b) => cmp(a) - cmp(b))
+	}
+
 	public thenSortBy(sorter: Sorter<T>): Comparator<T> {
 		return new Comparator([...this.sortChain, this.currentSorter], sorter)
 	}
+
 	public reversed(): Comparator<T> {
-		return new Comparator([...this.sortChain], (a, b) => {
-			return -1 * this.currentSorter(a, b)
-		})
+		const cp = new Comparator([...this.sortChain], this.currentSorter)
+		cp.isReversed = -1 * this.isReversed
+		return cp
 	}
-	private constructor(chain: Sorter<T>[], sorter: Sorter<T>) {
-		this.sortChain = [...chain]
-		this.currentSorter = sorter
+
+	public reverse(): Comparator<T> {
+		this.isReversed = -1 * this.isReversed
+		return this
 	}
-	private sortChain: Sorter<T>[]
-	private currentSorter: Sorter<T>
 }
 export type nsSorter<T> = (ns: NS) => Comparator<T>
 export const RootAccessRank: nsSorter<string> = function (ns) {
 	return Comparator.comparing<string>((a) => +ns.hasRootAccess(a)).reversed()
 }
 export const MaxMoneyRank: nsSorter<string> = function (ns) {
-	return Comparator.comparing(ns.getServerMaxMoney).reversed()
+	return Comparator.comparing<string>(ns.getServerMaxMoney).reversed()
 }
 export const CurrentMoneyRateRank: nsSorter<string> = function (ns) {
-	return Comparator.comparing<string>(CurrMoneyRate.bind(ns)).reversed()
+	return Comparator.comparing<string>(CurrMoneyFlow.bind(ns)).reversed()
 }
 export const PotentialMoneyRank: nsSorter<string> = function (ns) {
-	return Comparator.comparing<string>(PotentialMoneyRate.bind(ns)).reversed()
+	return Comparator.comparing<string>(PotentialMoneyFlow.bind(ns)).reversed()
 }
 export const HackLevelRank: nsSorter<string> = function (ns) {
 	return Comparator.comparing<string>(ns.getServerRequiredHackingLevel)

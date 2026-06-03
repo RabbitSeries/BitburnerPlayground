@@ -3,19 +3,11 @@ import { HackTask, ScanAllServers } from "/Hack/HackHelpers"
 import React, { useCallback, useEffect, useRef } from "react"
 enum TaskState {
 	IDLE,
-	STOPPING,
-	STARTING,
 	RUNNING
 }
 // import { FullScheduler, Schedulers } from "../../Hack/Schedulers/Schedulers"
-import {
-	AwaitTasks,
-	ScheduleGrowTask,
-	ScheduleHackTask,
-	ScheduleWeakenTask
-} from "/Hack/Schedulers/ScheduleHelpers"
+import { AwaitTasks, ScheduleGrowTask, ScheduleHackTask, ScheduleWeakenTask } from "/Hack/Schedulers/ScheduleHelpers"
 import { StopToken, type JThread } from "../OS/Process"
-// import { FreeRam } from "/utils/ServerStat"
 import { Pipeline } from "/Hack/Schedulers/Pipeline"
 export function Actions({ ns, host }: { ns: NS; host: string }) {
 	const options = [
@@ -33,11 +25,8 @@ export function Actions({ ns, host }: { ns: NS; host: string }) {
 			onResolve: () => void,
 			onReject: () => void
 		) => {
-			if (state.current === TaskState.STARTING || state.current === TaskState.STOPPING) {
-				return onReject()
-			}
+			// The second task overrides the first task
 			if (state.current === TaskState.RUNNING) {
-				state.current = TaskState.STOPPING
 				if (attached_task.current) {
 					const { stop_token, task } = attached_task.current
 					stop_token.reqeust_stop()
@@ -46,8 +35,9 @@ export function Actions({ ns, host }: { ns: NS; host: string }) {
 				}
 				state.current = TaskState.IDLE
 			}
+			// Ready to create a new task
 			if (attached_task.current === null && state.current === TaskState.IDLE) {
-				state.current = TaskState.STARTING
+				// Actualy, there is no need to protect STARTING, there is not concurrent race.
 				const stop_token = new StopToken()
 				attached_task.current = {
 					name,
@@ -99,7 +89,7 @@ export function Actions({ ns, host }: { ns: NS; host: string }) {
 								ns.print("SUCCESS: Attached session cleaned")
 							},
 							() => (currentTarget.textContent = `Attaching[🔄]`),
-							() => {}
+							() => { }
 						)
 					}}
 				>{`${task}[✖]`}</td>
@@ -116,7 +106,7 @@ export function Actions({ ns, host }: { ns: NS; host: string }) {
 							return Pipeline(ns, host, undefined, token)
 						},
 						() => (currentTarget.textContent = "Attaching[🔄]"),
-						() => {}
+						() => { }
 					)
 					// } else {
 					//     const pid = new FullScheduler(ns, host).run()

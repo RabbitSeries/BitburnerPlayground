@@ -22,42 +22,34 @@ export function ScanAllServers(ns: NS) {
 	}
 }
 
+export function GetAllServers5(ns: NS, set = new Set(['home'])) {
+	return set.forEach(hn => ns.scan(hn).forEach(o => set.add(o))) ?? [...set.values()];
+}
+
 export function TryNuke(ns: NS, target: string) {
 	if (ns.hasRootAccess(target)) {
 		return true
 	}
-	try {
+	if (ns.fileExists("BruteSSH.exe")) {
 		ns.brutessh(target)
-	} catch {
-		/*  */
 	}
-	try {
+	if (ns.fileExists("FTPCrack.exe")) {
 		ns.ftpcrack(target)
-	} catch {
-		/*  */
 	}
-	try {
+	if (ns.fileExists("relaySMTP.exe")) {
 		ns.relaysmtp(target)
-	} catch {
-		/*  */
 	}
-	try {
+	if (ns.fileExists("HTTPWorm.exe")) {
 		ns.httpworm(target)
-	} catch {
-		/*  */
 	}
-	try {
+	if (ns.fileExists("SQLInject.exe")) {
 		ns.sqlinject(target)
-	} catch {
-		/*  */
 	}
 	// Keep nuke at last
-	try {
-		ns.nuke(target)
-	} catch {
-		/*  */
+	if (ns.fileExists("NUKE.exe")) {
+		return ns.nuke(target)
 	}
-	return ns.hasRootAccess(target)
+	return false
 }
 
 export enum HackTask {
@@ -79,7 +71,7 @@ export function TryHacking(ns: NS, miner: IMiner, ...args: ScriptArg[]): number 
 		// ns.print(`SUCCESS: running ${scriptPath} on ${currentHost} hacking ${target} with threadOptions: ${threadOptions} at ${result}`)
 		const freeRam = FreeRam.bind(ns)(currentHost),
 			required = +threadOptions * ns.getScriptRam(scriptPath)
-		const formated = `${ns.formatRam(freeRam)}/${ns.formatRam(required)}`
+		const formated = `${ns.format.ram(freeRam)}/${ns.format.ram(required)}`
 		if (freeRam < required) {
 			// When running restricted machine, such start phase of each bitnode
 			throw new Error(

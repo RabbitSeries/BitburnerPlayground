@@ -1,11 +1,11 @@
 import type { NS } from "@ns"
-export function CurrMoneyRate(this: NS, host: string) {
+export function CurrMoneyFlow(this: NS, host: string) {
 	return (
 		(this.getServerMoneyAvailable(host) * HackPercent.bind(this)(host)) /
 		(this.getWeakenTime(host) / 1000)
 	)
 }
-export function PotentialMoneyRate(this: NS, host: string) {
+export function PotentialMoneyFlow(this: NS, host: string) {
 	const minSecurity = this.getServerMinSecurityLevel(host),
 		currSecurity = this.getServerSecurityLevel(host)
 	const hackPercentAdjust = (1 - minSecurity / 100) / (1 - currSecurity / 100)

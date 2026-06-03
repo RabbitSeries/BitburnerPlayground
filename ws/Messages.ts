@@ -1,62 +1,77 @@
-type RequestNoParam = {
-	jsonrpc: "2.0"
-	id: number
-	method: string
+import { z } from "zod"
+type Request<T = undefined> = {
+	jsonrpc: "2.0",
+	id: number,
+	method: string,
+	params?: T
 }
-export type Request<T = undefined> = RequestNoParam & { params?: T }
-export type Response<T = undefined> = RequestNoParam & {
-	result?: T
-	error?: object | string | number
-}
-type FileName = { filename: string }
+const FileNameShaped = z.object({ filename: z.string() })
+type FileName = z.infer<typeof FileNameShaped>
 type Server = { server: string }
-type Content = { content: string }
+const ContentShaped = z.object({ content: z.string() })
+type Content = z.infer<typeof ContentShaped>
 type FileServer = FileName & Server
 export interface PushFile extends Request<FileServer & Content> {
 	method: "pushFile"
 }
-type Status = "OK" | undefined
-export type PushFileResponse = Response<Status>
 export interface GetFile extends Request<FileServer> {
 	method: "getFile"
 }
-export type GetFileResponse = Response<Status>
 export interface GetFileMetadata extends Request<FileServer> {
 	method: "getFileMetadata"
 }
-type Metadata = FileName & { atime: string; btime: string; mtime: string }
-export type GetFileMetadataResponse = Response<Metadata>
 export interface DeleteFile extends Request<FileServer> {
 	method: "deleteFile"
 }
-export type DeleteFileResponse = Response<Status>
 export interface GetFileNames extends Request<Server> {
 	method: "getFileNames"
 }
-export type GetFileNamesResponse = Response<string[]>
 export interface GetAllFiles extends Request<Server> {
 	method: "getAllFiles"
 }
-export type GetAllFilesResponse = Response<FileName & Content>
 export interface GetAllFileMetadata extends Request<Server> {
 	method: "getAllFileMetadata"
 }
-export type GetAllFileMetadataResponse = Response<Metadata[]>
 export interface CalculateRam extends Request<FileServer> {
 	method: "calculateRam"
 }
-export type CalculateRamResponse = Response<number>
 export interface GetDefinitionFile extends Request {
 	method: "getDefinitionFile"
 }
-export type GetDefinitionFileResponse = Response<string>
 export interface GetSaveFile extends Request {
 	method: "getSaveFile"
 }
-export type GetSaveFileResponse = Response<{ identifier: string; binary: string; save: string }>
 export interface GetAllServers extends Request {
 	method: "getAllServers"
 }
-export type GetAllServersResponse = Response<
-	{ hostname: string; hasAdminRights: boolean; purchaseByPlayer: boolean }[]
->
+
+function ResponseShaped<T extends undefined | z.core.SomeType>(t?: T) {
+	return z.object({
+		jsonrpc: z.literal("2.0"),
+		id: z.number(),
+		result: t === undefined ? z.undefined() : z.undefined().or(t),
+		error: z.any()
+	})
+}
+const StatusShaped = z.literal("OK").optional()
+const MetadataShaped = FileNameShaped.extend({ atime: z.string(), btime: z.string(), mtime: z.string() })
+export const AnyResponse = ResponseShaped(z.any())
+export const PushFileResponse = ResponseShaped(StatusShaped)
+export const GetFileResponse = PushFileResponse
+export const GetFileMetadataResponse = ResponseShaped(MetadataShaped)
+export const DeleteFileResponse = PushFileResponse
+export const GetFileNamesResponse = ResponseShaped(z.string().array())
+export const GetAllFilesResponse = ResponseShaped(FileNameShaped.extend(ContentShaped.shape))
+export const GetAllFileMetadataResponse = ResponseShaped(MetadataShaped.array())
+export const CalculateRamResponse = ResponseShaped(z.number())
+export const GetDefinitionFileResponse = ResponseShaped(z.string())
+export const GetSaveFileResponse = ResponseShaped(z.object({
+	identifier: z.string(),
+	binary: z.string(),
+	save: z.string()
+}))
+export const GetAllServersResponse = ResponseShaped(z.object({
+	hostname: z.string(),
+	hasAdminRights: z.boolean(),
+	purchaseByPlayer: z.boolean()
+}).array())

@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from "react"
 import type { NS } from "@ns"
 import { RootAccessRank, CurrentMoneyRateRank } from "/utils/Comparators"
-import ServerNode from "./ServerTable/ServerInfo"
+import { ServerInfo } from "./ServerTable/ServerInfo"
 import { Toolbar } from "./Pallates/Toolbar"
 import type { ProcessHandle } from "./OS/Process"
 import { TableHeader } from "./ServerTable/TableHeader"
 import { ScanAllServers } from "/Hack/HackHelpers"
 import { ServerTree } from "/AGC/ServerTree"
+// import { ServerTree } from "/AGC/ServerTree"
 export default function HackOS({
 	servers,
 	ns,
@@ -60,17 +61,17 @@ export default function HackOS({
 				<tbody>
 					{sorted.map((host, rowId) => {
 						return (
-							<ServerNode
+							<ServerInfo
 								key={host}
 								ns={ns}
 								host={host}
 								rowId={rowId + 1}
-							></ServerNode>
+							></ServerInfo>
 						)
 					})}
 				</tbody>
 			</table>
-			<ServerTree ns={ns}></ServerTree>
+			<ServerTree ns={ns} />
 		</div>
 	)
 }

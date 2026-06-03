@@ -1,88 +1,63 @@
 import type { NS } from "@ns"
 import React from "react"
-import { CurrMoneyRate, PotentialMoneyRate } from "/utils/ServerStat"
+import { CurrMoneyFlow, PotentialMoneyFlow } from "/utils/ServerStat"
 import { Actions } from "./Actions"
-export interface IServer {
-	Rank: React.JSX.Element
-	Host: React.JSX.Element
-	Root: React.JSX.Element
-	HackLevel: React.JSX.Element
-	Ports: React.JSX.Element
-	Money: React.JSX.Element
-	Secrurity: React.JSX.Element
-	HackTime: React.JSX.Element
-	Growth: React.JSX.Element
-	CurrMoneyRate: React.JSX.Element
-	PotentialMoneyRate: React.JSX.Element
-	RAM: React.JSX.Element
-	Contracts: React.JSX.Element
-	CORES: React.JSX.Element
-	Actions: React.JSX.Element
-}
-export function Server(ns: NS, host: string, rowId: number): IServer {
-	// This must be rebuilt
-	const stat = {
-		moneyAvailable: ns.getServerMoneyAvailable(host),
-		maxMoney: ns.getServerMaxMoney(host),
-		maxRam: ns.getServerMaxRam(host),
-		usedRam: ns.getServerUsedRam(host),
-		curSecurity: ns.getServerSecurityLevel(host),
-		minSecurity: ns.getServerMinSecurityLevel(host),
-		hackTime: ns.getHackTime(host),
-		growTIme: ns.getGrowTime(host),
-		growth: ns.getServerGrowth(host),
-		weakenTime: ns.getWeakenTime(host)
-	}
-	const MoneyRate = CurrMoneyRate.bind(ns)(host),
-		pMoney = PotentialMoneyRate.bind(ns)(host)
+import { serverInfo } from "./ServerInfoMeta"
+import type { TableHeaderMeta } from "./TableHeaderMeta"
+
+export function ServerInfoObject(ns: NS, rowId: number, host: string): Record<TableHeaderMeta, React.JSX.Element> {
+	const formatNumber = ns.format.number
+	const server = serverInfo(ns, host)
+	const MoneyRate = CurrMoneyFlow.bind(ns)(host), pMoney = PotentialMoneyFlow.bind(ns)(host)
 	return {
-		Rank: <td>{rowId}</td>,
-		Host: <td>{host}</td>,
-		Root: <td>{ns.hasRootAccess(host) ? "✔" : "✖"}</td>,
-		HackLevel: (
+		"Rank": <td>{rowId} </td>,
+		"Server": <td>{server.hostname} </td>,
+		"Root": <td>{server.hasAdminRights ? "✔" : "✖"} </td>,
+		"Hack Level": (
 			<td>
-				{ns.getHackingLevel()}/{ns.getServerRequiredHackingLevel(host)}
+				{ns.getHackingLevel()} / {server.requiredHackingSkill}
 			</td>
 		),
-		Ports: <td>{ns.getServerNumPortsRequired(host)}</td>,
-		Money: (
+		"Ports": <td>{server.numOpenPortsRequired} </td>,
+		"Money": (
 			<td>
-				{ns.formatNumber(stat.moneyAvailable, 1)}/{ns.formatNumber(stat.maxMoney, 1)}
-				{`(${stat.maxMoney ? ns.formatPercent(stat.moneyAvailable / stat.maxMoney, 1) : "N/A"})`}
+				{formatNumber(server.moneyAvailable ?? 0, 1)} / {formatNumber(server.moneyMax ?? 0, 1)}
+				{`(${server.moneyMax ? ns.format.percent(server.moneyAvailable ?? 0 / server.moneyMax, 1) : "N/A"})`}
 			</td>
 		),
-		Secrurity: (
+		"Security": (
 			<td>
-				{ns.formatNumber(stat.minSecurity, 0)}/{ns.formatNumber(stat.curSecurity, 1)}
+				{formatNumber(server.minDifficulty ?? 0, 0)} / {formatNumber(server.hackDifficulty ?? 0, 1)}
 			</td>
 		),
-		HackTime: (
+		"HWG Time/mins": (
 			<tbody>
-				<td>{ns.formatNumber(stat.hackTime / 1000 / 60, 1)} </td>
-				<td>{ns.formatNumber(stat.weakenTime / 1000 / 60, 1)} </td>
-				<td>{ns.formatNumber(stat.growTIme / 1000 / 60, 1)}</td>
+				<td>{formatNumber(server.hackTime / 1000 / 60, 1)} </td>
+				< td > {formatNumber(server.weakenTime / 1000 / 60, 1)} </td>
+				< td > {formatNumber(server.growTime / 1000 / 60, 1)} </td>
 			</tbody>
 		),
-		Growth: <td>{stat.growth}</td>,
-		CurrMoneyRate: <td>{isNaN(MoneyRate) ? "NAN" : ns.formatNumber(MoneyRate, 1)}</td>,
-		PotentialMoneyRate: <td>{isNaN(pMoney) ? "NAN" : ns.formatNumber(pMoney, 1)}</td>,
-		RAM: (
-			<td>{`${ns.formatNumber(stat.maxRam - stat.usedRam, 2)}/${ns.formatNumber(stat.maxRam, 2)}`}</td>
+		"Growth": <td>{server.serverGrowth} </td>,
+		"Current$/s": <td>{isNaN(MoneyRate) ? "NAN" : formatNumber(MoneyRate, 1)} </td>,
+		"Potential$/s": <td>{isNaN(pMoney) ? "NAN" : formatNumber(pMoney, 1)} </td>,
+		"RAM": (
+			<td>{`${formatNumber(server.maxRam - server.ramUsed, 2)}/${formatNumber(server.maxRam, 2)}`} </td>
 		),
-		Contracts: <td style={{ textAlign: "center" }}>{ns.ls(host, ".cct").length}</td>,
-		CORES: <td>{ns.getServer(host).cpuCores}</td>,
-		// Add a key to this, so the diff algorithm won't recreate new content for it
-		Actions: <Actions key={host} host={host} ns={ns}></Actions>
+		"Contracts": <td style={{ textAlign: "center" }}> {ns.ls(host, ".cct").length} </td>,
+		"Cores": <td>{ns.getServer(host).cpuCores} </td>,
+		// Add a key to this, so the diff algorithm won't recreate new content for it, when reorders the table.
+		"Actions": <Actions key={host} host={host} ns={ns} />
 	}
 }
-export default function ServerNode({ ns, host, rowId }: { ns: NS; host: string; rowId: number }) {
-	const server = Server(ns, host, rowId)
+
+export function ServerInfo({ ns, host, rowId }: { ns: NS, host: string, rowId: number }) {
+	const content = ServerInfoObject(ns, rowId, host)
 	return (
 		<tr
 			className={ns.hasRootAccess(host) ? "has-access" : "no-access"}
 			style={{ color: ns.hasRootAccess(host) ? "cyan" : "auto" }}
 		>
-			{Object.entries(server).map((K_V: [string, React.JSX.Element]) => K_V[1])}
+			{Object.values(content)}
 		</tr>
 	)
 }

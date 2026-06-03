@@ -1,4 +1,4 @@
-import type { NS } from "@ns"
+import type { NS, Server } from "@ns"
 import { ShareOn } from "../HackHelpers"
 import { GrowMiner, HackMiner, MinerPaths, WeakenMiner } from "../Miners/Miners"
 import { FreeRam } from "/utils/ServerStat"
@@ -17,7 +17,7 @@ export async function watchDog(ns: NS, pid: number, guardTime: number) {
 	const running = ns.getRunningScript(pid)
 	if (running) {
 		ns.print(
-			`WARN: Woof!!! Script has ran ${ns.tFormat(running.onlineRunningTime * 1000, true)}`
+			`WARN: Woof!!! Script has ran ${ns.format.time(running.onlineRunningTime * 1000, true)}`
 		)
 		ns.print(`Logs: ${running.logs}`)
 		await new Promise((r) => setTimeout(r, guardTime))
@@ -196,7 +196,7 @@ export function ScheduleGrowTask(
 		lastTaskPid = new WeakenMiner(ns, host, target, wThread, aligns.weakenTime).run()
 		try {
 			totalGrowed *= ns.formulas.hacking.growPercent(
-				ns.getServer(target),
+				ns.getServer(target) as Server,
 				gThread,
 				ns.getPlayer()
 			)

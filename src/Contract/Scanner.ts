@@ -10,7 +10,6 @@ type TaskType = { messenger: Messenger, message: MessageData }
 class WorkerPool {
 	private workers: WorkerDetail[] = []
 	private taskList: TaskType[] = []
-
 	public setPoolSize(size: number, script: string) {
 		if (this.workers.length) {
 			this.disposeAll()
@@ -144,13 +143,14 @@ export async function main(ns: NS) {
 			pool = workerPool
 			workerPool.setPoolSize(4, ns.read("Contract/Worker.js"))
 		}
+		const failFast = await ns.prompt("Terminate on the first failure?", { type: "boolean" }) as boolean
 		await measureTime(async () => {
 			if (contractName === "ALL") {
 				for (const name of Object.keys(ContractSolves)) {
-					ns.tprint(`${name}: ${await runTests(ns, name as CodingContractName, total, pool)}/${total}`)
+					ns.tprint(`${name}: ${await runTests(ns, name as CodingContractName, total, failFast, pool)}/${total}`)
 				}
 			} else if (contractName in ContractSolves) {
-				ns.tprint(`${contractName}: ${await runTests(ns, contractName as CodingContractName, total, pool)}/${total}`)
+				ns.tprint(`${contractName}: ${await runTests(ns, contractName as CodingContractName, total, failFast, pool)}/${total}`)
 			}
 		})
 	} else if (solveMode === "Tinkle") {
@@ -170,7 +170,7 @@ export async function main(ns: NS) {
 	}
 }
 
-async function runTests(ns: NS, contractName: CodingContractName, round: number, pool?: WorkerPool) {
+async function runTests(ns: NS, contractName: CodingContractName, round: number, failFast: boolean, pool?: WorkerPool) {
 	let count = 0
 	const contractApi = ns.codingcontract
 	for (let i = 0; i < round; i++) {
@@ -184,12 +184,17 @@ async function runTests(ns: NS, contractName: CodingContractName, round: number,
 			if (result === null || contractApi.attempt(result, filename, "home").length === 0) {
 				ns.tprint("Failed on: ", contract.data)
 				ns.tprint("My guess: ", result)
-				break
+				if (failFast) {
+					break
+				}
 			} else {
 				count++
 			}
 		} catch (e) {
 			ns.tprint(`ERROR: runtime error in runtTests: ${e}`)
+			if (failFast) {
+				break
+			}
 		}
 		// cleanup contracts
 		if (ns.fileExists(filename)) {

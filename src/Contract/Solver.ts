@@ -611,23 +611,19 @@ export const ContractSolves: {
 		return result
 	},
 	"Compression III: LZ Compression": ({ data }) => {
-		type state = {
-			index: number
-			isReference: boolean
-			content: string // Carry this state's content information, this won't be hashed. This content should keep the same property with mapped value.
-		}
-		const key = (s: state) => `${s.index},${s.isReference}`
-		const start: state = {
+		const start = {
 			index: -1,
 			isReference: true,
-			content: ""
+			content: "" // Carry this state's content information, this won't be hashed. This content should keep the same property with mapped value.
 		}
+		type State = typeof start;
+		const key = (s: State) => `${s.index},${s.isReference}`
 		// const endKey = key({index: data.length-1, isReference : true | false, content : any})
 		// shortest[state] => shortest[state]+nextState.length
 		// nextState: not isReference-> nextReference -> longest common string
 		//            isReference    -> keep raw      -> i~n compress
 		const shortest = new Map<string, number>([[key(start), 0]]) // HashKey => minLength
-		const heappush = (nextState: state) => {
+		const heappush = (nextState: State) => {
 			const nextKey = key(nextState)
 			if (!shortest.has(nextKey) || shortest.get(nextKey)! > nextState.content.length) {
 				// Change > to >= to retrieve all results
@@ -635,7 +631,7 @@ export const ContractSolves: {
 				q.push(nextState)
 			}
 		}
-		const q = new SmallHeap<state>((a: state, b: state) =>
+		const q = new SmallHeap<State>((a, b) =>
 			a.index === b.index ? a.content.length - b.content.length : a.index - b.index
 		)
 		q.push(start)
@@ -847,8 +843,3 @@ export function solveSync<T extends CodingContractName>(
 ) {
 	return ContractSolves[contract.type](contract)
 }
-
-console.log(solveSync({
-	type: "Proper 2-Coloring of a Graph",
-	data: [9, [[4, 7], [4, 8], [0, 3], [1, 8], [4, 6], [5, 6], [1, 7], [0, 7], [4, 6], [5, 8], [0, 6]]]
-} as CodingContractObject))

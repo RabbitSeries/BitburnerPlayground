@@ -7,5 +7,10 @@
 			],
 			"url": "https://www.schemastore.org/prettierrc.json"
 		}
-	]
+	],
+	"[typescript]": {
+		"editor.defaultFormatter": "vscode.typescript-language-features"
+	},
+	"editor.renderWhitespace": "all",
+	"editor.unicodeHighlight.invisibleCharacters": true
 }

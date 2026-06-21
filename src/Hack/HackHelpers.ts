@@ -22,10 +22,6 @@ export function ScanAllServers(ns: NS) {
 	}
 }
 
-export function GetAllServers5(ns: NS, set = new Set(['home'])) {
-	return set.forEach(hn => ns.scan(hn).forEach(o => set.add(o))) ?? [...set.values()];
-}
-
 export function TryNuke(ns: NS, target: string) {
 	if (ns.hasRootAccess(target)) {
 		return true
@@ -62,7 +58,7 @@ export function TryHacking(ns: NS, miner: IMiner, ...args: ScriptArg[]): number 
 	const scriptPath = miner.scriptPath,
 		currentHost = miner.args.hostName,
 		target = miner.args.targetName,
-		threadOptions = miner.threadOptions
+		threadOptions = miner.args.threadOption
 	if (typeof threadOptions === "number" && threadOptions === 0) {
 		return 0
 	}
@@ -135,7 +131,7 @@ export function Scp(ns: NS, destination: string): boolean {
 	)
 }
 
-export const ShareOn = (ns: NS, host: string, time?: number): Promise<void> => {
+export function ShareOn(ns: NS, host: string, time?: number): Promise<void> {
 	return new Promise((resolve) => {
 		ns.scriptKill(MinerPaths.MemSharer.scriptPath, host)
 		new MemSharer(

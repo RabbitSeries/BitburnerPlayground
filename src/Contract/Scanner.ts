@@ -96,6 +96,16 @@ async function solveAsync(contract: CodingContractObject, pool: WorkerPool) {
 	})
 }
 
+function attemptResult(result: ReturnType<typeof solveSync>, ns: NS, host: string, filename: string) {
+	const contract = ns.codingcontract.getContract(filename, host)
+	if (result != null) {
+		const msg = ns.codingcontract.attempt(result, filename, host)
+		ns.tprint(`Contract ${contract.type} ran on server ${host}:  ${msg.length ? msg : `Failed with result ${result}`}`)
+	} else {
+		ns.tprint(`Result is null, this contract's solution is not achieved yet: ${contract.type}`)
+	}
+}
+
 export async function main(ns: NS) {
 	// Gloabl using seems not able to be auto disposed if executed in game
 	using workerPool = new WorkerPool()
@@ -104,21 +114,26 @@ export async function main(ns: NS) {
 		await fun()
 		ns.tprint("Total cost: ", ns.format.time(Date.now() - now, true))
 	}
-	const solveMode = await ns.prompt("Solve or Test?", { type: "select", choices: ["Solve", "Test"] }) as string
+	const choices = ["Solve", "Test", "Tinkle"] as const
+	const solveMode = await ns.prompt("Select a scanner mode", { type: "select", choices: [...choices] }) as (typeof choices)[number]
+	const getContractName = async () => {
+		return await ns.prompt("Select a contract", { type: "select", choices: ["ALL", ...Object.keys(ContractSolves)] }) as string
+	}
 	if (solveMode === "Solve") {
 		workerPool.setPoolSize(6, ns.read("Contract/Worker.js"))
 		await measureTime(async () => {
 			for (const host of ["home", ...ScanAllServers(ns).sorted]) {
 				for (const file of ns.ls(host, ".cct")) {
+					ns.tprint("Attempting " + file + " on server " + host)
 					const contract = ns.codingcontract.getContract(file, host)
 					const result = await solveAsync(contract, workerPool)
-					ns.tprint(host, ": ", ns.codingcontract.attempt(result, file, host))
+					attemptResult(result, ns, host, file)
 				}
 			}
 		})
 	} else if (solveMode === "Test") {
 		const total = await (ns.prompt("Round for each contract", { type: "text" }) as Promise<string>).then(it => parseInt(it))
-		const contractName = await ns.prompt("Select a contract", { type: "select", choices: ["ALL", ...Object.keys(ContractSolves)] }) as string
+		const contractName = await getContractName()
 		if (!contractName.length) {
 			ns.tprint("Canceled contract selection")
 			return
@@ -138,6 +153,18 @@ export async function main(ns: NS) {
 				ns.tprint(`${contractName}: ${await runTests(ns, contractName as CodingContractName, total, pool)}/${total}`)
 			}
 		})
+	} else if (solveMode === "Tinkle") {
+		const contractName = await getContractName()
+		const filename = ns.codingcontract.createDummyContract(contractName as CodingContractName)
+		if (filename) {
+			await ns.prompt(filename + "\n" + ns.codingcontract.getContract(filename).description)
+			const result = solveSync(ns.codingcontract.getContract(filename))
+			attemptResult(result, ns, "home", filename)
+			ns.rm(filename)
+		} else {
+			ns.tprint("Failed to create coding contract.")
+		}
+
 	} else {
 		ns.tprint("Unrecognized options")
 	}
@@ -171,4 +198,3 @@ async function runTests(ns: NS, contractName: CodingContractName, round: number,
 	}
 	return count
 }
-

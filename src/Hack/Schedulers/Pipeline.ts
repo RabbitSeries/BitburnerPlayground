@@ -100,19 +100,11 @@ export async function Pipeline(
 					pHosts[pipeLineId].launched--
 					newTask = true
 					ns.print(`Done pipeline segment on host ${host}, pid ${pid}`)
-					ns.print(
-						`\tThis task was aligned to ${ns.format.time(fixedAligned - delay, true)}}, ${ns.format.time(fixedAligned, true)}]`
-					)
-					ns.print(
-						`\tTarget Money: ${ns.format.percent(ns.getServerMoneyAvailable(target) / ns.getServerMaxMoney(target), 1)}`
-					)
-					ns.print(
-						`\tTarget Security: ${ns.format.percent(ns.getServerMinSecurityLevel(target) / ns.getServerSecurityLevel(target), 1)}`
-					)
+					ns.print(`\tThis task was aligned to ${ns.format.time(fixedAligned - delay, true)}}, ${ns.format.time(fixedAligned, true)}]`)
+					ns.print(`\tTarget Money: ${ns.format.percent(ns.getServerMoneyAvailable(target) / ns.getServerMaxMoney(target), 1)}`)
+					ns.print(`\tTarget Security: ${ns.format.percent(ns.getServerMinSecurityLevel(target) / ns.getServerSecurityLevel(target), 1)}`)
 				} else {
-					ns.print(
-						`Task is runnning on host ${host}, pid ${pid}, remaining: ${ns.format.time(now - logicBegin, true)}`
-					)
+					ns.print(`Task is runnning on host ${host}, pid ${pid}, remaining: ${ns.format.time(now - logicBegin, true)}`)
 				}
 			}
 
@@ -120,44 +112,13 @@ export async function Pipeline(
 				const { host, threadBoost } = pHosts[pipeLineId]
 				pHosts[pipeLineId].launched++
 				const { hThread, wThread1, gThread, wThread2 } = threadBoost
-				const { aligned: fixedAligned, aligns: fixedAligns } = OffsetAligns(
-					ns,
-					target,
-					aligned,
-					offset
-				)
-				const hPid = new HackMiner(
-					ns,
-					host,
-					target,
-					hThread,
-					fixedAligns.HackTime - delay
-				).run()
-				const wPid1 = new WeakenMiner(
-					ns,
-					host,
-					target,
-					wThread1,
-					fixedAligns.weaken1Time - (2 * delay) / 3
-				).run()
-				const gPid = new GrowMiner(
-					ns,
-					host,
-					target,
-					gThread,
-					fixedAligns.growTime - delay / 3
-				).run()
-				const wPid2 = new WeakenMiner(
-					ns,
-					host,
-					target,
-					wThread2,
-					fixedAligns.weaken2Time
-				).run()
+				const { aligned: fixedAligned, aligns: fixedAligns } = OffsetAligns(ns, target, aligned, offset)
+				const hPid = new HackMiner(ns, { hostName: host, targetName: target, threadOption: hThread }, fixedAligns.HackTime - delay).run()
+				const wPid1 = new WeakenMiner(ns, { hostName: host, targetName: target, threadOption: wThread1 }, fixedAligns.weaken1Time - (2 * delay) / 3).run()
+				const gPid = new GrowMiner(ns, { hostName: host, targetName: target, threadOption: gThread, }, fixedAligns.growTime - delay / 3).run()
+				const wPid2 = new WeakenMiner(ns, { hostName: host, targetName: target, threadOption: wThread2, }, fixedAligns.weaken2Time).run()
 				if (!hPid || !wPid1 || !gPid || !wPid2) {
-					ns.print(
-						`Failed to launch on ${host}: ${pHosts[pipeLineId].launched} / ${pHosts[pipeLineId].count}`
-					)
+					ns.print(`Failed to launch on ${host}: ${pHosts[pipeLineId].launched} / ${pHosts[pipeLineId].count}`)
 					break
 				}
 				taskQ.push({
@@ -166,13 +127,9 @@ export async function Pipeline(
 					logicBegin: now + offset,
 					aligned: fixedAligned
 				})
-				ns.print(
-					`\tNext segment running on ${wPid2}, pipeline height: ${taskQ.length}/${pHeight}`
-				)
+				ns.print(`\tNext segment running on ${wPid2}, pipeline height: ${taskQ.length}/${pHeight}`)
 			}
-			ns.print(
-				`\twait: ${ns.format.time(nextWait, true)}, per segment: ${ns.format.time(pSegTime, true)}`
-			)
+			ns.print(`\twait: ${ns.format.time(nextWait, true)}, per segment: ${ns.format.time(pSegTime, true)}`)
 			ns.print(`\toffset: ${ns.format.time(offset, true)}`)
 			await new Promise((r) => setTimeout(r, pSegTime + offset))
 		}

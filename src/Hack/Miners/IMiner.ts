@@ -1,14 +1,13 @@
-import type { NS, RunOptions } from "@ns"
+import type { NS } from "@ns"
 export interface IMinerArgs {
 	hostName: string
 	targetName: string
-	threadOptions?: number | RunOptions
+	threadOption: number
 }
 
 export interface IMiner {
-	args: IMinerArgs
 	ns: NS
+	args: IMinerArgs
 	scriptPath: string
-	threadOptions: number | RunOptions
 	run: () => number
 }

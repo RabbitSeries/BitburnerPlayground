@@ -1,5 +1,57 @@
 import type { CodingContractName, CodingContractObject, CodingContractSignatures } from "@ns"
 
+class SmallHeap<T> {
+	constructor(private sorter: (a: T, b: T) => number) { }
+
+	public get size() {
+		return this.q.length;
+	}
+	private q: T[] = []
+	private sift_down(i: number) {
+		while (i < this.q.length) {
+			let minimal = i
+			if (i * 2 + 1 < this.size && this.sorter(this.q[i * 2 + 1], this.q[minimal]) < 0) {
+				minimal = i * 2 + 1
+			}
+			if (i * 2 + 2 < this.size && this.sorter(this.q[i * 2 + 2], this.q[minimal]) < 0) {
+				minimal = i * 2 + 2
+			}
+			if (minimal !== i) {
+				[this.q[i], this.q[minimal]] = [this.q[minimal], this.q[i]]
+				i = minimal
+			} else {
+				break
+			}
+		}
+	}
+	private sift_up = (i: number) => {
+		while (i) {
+			const p = Math.floor((i - 1) / 2)
+			if (this.sorter(this.q[i], this.q[p]) < 0) {
+				[this.q[i], this.q[p]] = [this.q[p], this.q[i]]
+				i = p
+			} else {
+				break
+			}
+		}
+	}
+	public push = (nextState: T) => {
+		this.q.push(nextState)
+		this.sift_up(this.size - 1)
+	}
+	public pop = () => {
+		const s = this.q[0]
+		if (this.q.length == 1) {
+			this.q.pop()
+		} else {
+			[this.q[0], this.q[this.size - 1]] = [this.q[this.size - 1], this.q[0]]
+			this.q.pop()
+			this.sift_down(0)
+		}
+		return s
+	}
+}
+
 const AlgorithmicStockTraderSolver = (TransN: number, prices: number[]): number => {
 	const DayN = prices.length
 	prices = [0, ...prices] /* Index from 1 */
@@ -78,8 +130,7 @@ const HammingEncode = (data: number) => {
 	)
 	const parity = [...Parity(encoded).toString(2)]
 	// From bit 1 to bit k, mix into encoded in appropriate decode index, hamming code ues 2^i
-	parity
-		.reverse()
+	parity.reverse()
 		.map((v) => parseInt(v))
 		.forEach((v, i) => (encoded[2 ** i] |= v))
 	encoded[0] = encoded.reduce((a, b) => (a ^ b) as 0 | 1, 0) // Mix the extended bit, make the 1 bit's count even
@@ -474,8 +525,7 @@ export const ContractSolves: {
 		return HammingDecode(data)
 	},
 	"Proper 2-Coloring of a Graph": ({ data }) => {
-		const vertexN = data[0],
-			edges = data[1]
+		const [vertexN, edges] = [data[0], data[1]]
 		const graph = Array.from({ length: vertexN }, () => new Set<number>())
 		const cliques = new Set<number>()
 		for (const [u, v] of edges) {
@@ -484,11 +534,7 @@ export const ContractSolves: {
 			cliques.add(u)
 			cliques.add(v)
 		}
-		const floodGraph = (
-			entry: number,
-			color: boolean,
-			colored: Map<number, boolean>
-		): boolean => {
+		const floodGraph = (entry: number, color: boolean, colored: Map<number, boolean>): boolean => {
 			const q: [number, boolean][] = [[entry, color]]
 			while (q.length > 0) {
 				const [node, fill] = q.shift()!
@@ -571,28 +617,6 @@ export const ContractSolves: {
 			content: string // Carry this state's content information, this won't be hashed. This content should keep the same property with mapped value.
 		}
 		const key = (s: state) => `${s.index},${s.isReference}`
-		const findLongestCommon = (preEnd: number) => {
-			let res: { len: number; pre: number }[] = []
-			let maxLen = -Infinity
-			for (let i = 1; i <= 9; i++) {
-				// pre
-				const pre = preEnd - (i - 1)
-				if (pre < 0) {
-					break
-				}
-				for (let j = 0; j < 9; j++) {
-					const content = data.slice(pre, pre + j + 1)
-					if (data.slice(preEnd + 1).startsWith(content) && content.length >= maxLen) {
-						if (content.length > maxLen) {
-							res = []
-						}
-						res.push({ len: content.length, pre: i })
-						maxLen = content.length
-					}
-				}
-			}
-			return res
-		}
 		const start: state = {
 			index: -1,
 			isReference: true,
@@ -603,60 +627,21 @@ export const ContractSolves: {
 		// nextState: not isReference-> nextReference -> longest common string
 		//            isReference    -> keep raw      -> i~n compress
 		const shortest = new Map<string, number>([[key(start), 0]]) // HashKey => minLength
-		const q: state[] = [start]
-		const sorter = (a: state, b: state) =>
-			a.index === b.index ? a.content.length - b.content.length : a.index - b.index
-		const sift_down = (i: number) => {
-			while (i < q.length) {
-				let minimal = i
-				if (i * 2 + 1 < q.length && sorter(q[i * 2 + 1], q[minimal]) < 0) {
-					minimal = i * 2 + 1
-				}
-				if (i * 2 + 2 < q.length && sorter(q[i * 2 + 2], q[minimal]) < 0) {
-					minimal = i * 2 + 2
-				}
-				if (minimal !== i) {
-					;[q[i], q[minimal]] = [q[minimal], q[i]]
-					i = minimal
-				} else {
-					break
-				}
-			}
-		}
-		const sift_up = (i: number) => {
-			while (i) {
-				const p = Math.floor((i - 1) / 2)
-				if (sorter(q[i], q[p]) < 0) {
-					;[q[i], q[p]] = [q[p], q[i]]
-					i = p
-				} else {
-					break
-				}
-			}
-		}
 		const heappush = (nextState: state) => {
 			const nextKey = key(nextState)
 			if (!shortest.has(nextKey) || shortest.get(nextKey)! > nextState.content.length) {
 				// Change > to >= to retrieve all results
 				shortest.set(nextKey, nextState.content.length)
 				q.push(nextState)
-				sift_up(q.length - 1)
 			}
 		}
-		const heappop = () => {
-			const s = q[0]
-			if (q.length == 1) {
-				q.pop()
-			} else {
-				[q[0], q[q.length - 1]] = [q[q.length - 1], q[0]]
-				q.pop()
-				sift_down(0)
-			}
-			return s
-		}
-		let result = "" // Change result to [] to retrieve all results
-		while (q.length > 0) {
-			const s = heappop()
+		const q = new SmallHeap<state>((a: state, b: state) =>
+			a.index === b.index ? a.content.length - b.content.length : a.index - b.index
+		)
+		q.push(start)
+		let result = "" // Change to [] to retrieve all results
+		while (q.size > 0) {
+			const s = q.pop()
 			if (shortest.get(key(s))! > s.content.length) {
 				continue
 			} // shortes[s] === s.content.length from here
@@ -678,7 +663,30 @@ export const ContractSolves: {
 					})
 				}
 			} else {
-				for (const { len, pre } of [...findLongestCommon(s.index), { len: 0, pre: -1 }]) {
+				// Find longgest in common
+				const laterPart = data.slice(s.index + 1)
+				let res: { index: number; len: number }[] = []
+				let maxLen = -Infinity
+				for (let i = 1; i <= 9; i++) {
+					// pre
+					const pre = s.index - (i - 1)
+					if (pre < 0) {
+						break
+					}
+					let content = ""
+					for (let j = 0; j < 9; j++) {
+						content += data[pre + j]
+						if (laterPart.startsWith(content) && content.length >= maxLen) {
+							if (content.length > maxLen) {
+								res = []
+							}
+							res.push({ index: i, len: content.length })
+							maxLen = content.length
+						}
+					}
+				}
+				res.push({ len: 0, index: -1 }) // add a new start
+				for (const { len, index: pre } of res) {
 					heappush({
 						index: s.index + len,
 						isReference: true,
@@ -734,40 +742,104 @@ export const ContractSolves: {
 		const gap = data - best ** 2n
 		return (best + 1n) ** 2n - data > gap ? best : best + 1n
 	},
-	"Largest Rectangle in a Matrix": () => {
-		return null
+	"Largest Rectangle in a Matrix": ({ data }) => {
+		const [row, col] = [data.length, data[0].length]
+		const prefixSum = Array.from({ length: data.length }).map(() => Array.from({ length: data[0].length }).map(() => 0))
+		// Is this faster?
+		// The prefix used later is only row prefix and column prefix.
+		for (let i = 0; i < row; i++) {
+			for (let j = 0; j < col; j++) {
+				prefixSum[i][j] = data[i][j]
+				if (i >= 1) {
+					prefixSum[i][j] += prefixSum[i - 1][j]
+				}
+				if (j >= 1) {
+					prefixSum[i][j] += prefixSum[i][j - 1]
+				}
+				if (i >= 1 && j >= 1) {
+					prefixSum[i][j] -= prefixSum[i - 1][j - 1]
+				}
+			}
+		}
+		type Point = [number, number]
+		const oneCount = (from: Point, to: Point) => {
+			let total = prefixSum[to[0]][to[1]]
+			if (from[0] >= 1) {
+				total -= prefixSum[from[0] - 1][to[1]]
+			}
+			if (from[1] >= 1) {
+				total -= prefixSum[to[0]][from[1] - 1]
+			}
+			if (from[0] >= 1 && from[1] >= 1) {
+				total += prefixSum[from[0] - 1][from[1] - 1]
+			}
+			return total
+		}
+		let maxSize = 0
+		let result: [Point, Point] | undefined = undefined
+		// Greedy heap.
+		const q = new SmallHeap<[Point, Point, number]>((a, b) => b[2] - a[2])
+		for (let i = 0; i < row; i++) {
+			for (let j = 0; j < col; j++) {
+				const pos = [i, j] as Point
+				if (!data[i][j]) {
+					q.push([pos, pos, 1])
+				}
+			}
+		}
+		while (q.size) {
+			const [from, to, size] = q.pop()!
+			// Simple prediction branch cut.
+			if ((row - from[0] + 1) * (col - from[1] + 1) <= maxSize) {
+				continue
+			}
+			if (size > maxSize) {
+				maxSize = size
+				result = [from, to]
+			}
+			const exCol: Point = [to[0], to[1] + 1]
+			if (exCol[1] < col && !data[exCol[0]][exCol[1]] && !oneCount(from, exCol)) {
+				q.push([from, exCol, size + to[0] - from[0] + 1]) // add a col size
+			}
+			const exRow: Point = [to[0] + 1, to[1]]
+			if (exRow[0] < row && !data[exRow[0]][exRow[1]] && !oneCount(from, exRow)) {
+				q.push([from, exRow, size + to[1] - from[1] + 1]) // add a row size
+			}
+		}
+		return result ?? null
 	},
-	"Total Number of Primes": () => {
-		return null
+	"Total Number of Primes": ({ data }) => {
+		const [start, end] = data
+		const increment = end - start
+		const endRoot = Math.ceil(Math.sqrt(end)) // floor is actually enough, but sqrt(25) might be 4.9999, ceil it.
+		const sieve = Array.from({ length: endRoot + 1 }, () => true)
+		sieve[0] = sieve[1] = false
+		const primes: number[] = []
+		for (let i = 2; i <= endRoot; i++) {
+			if (sieve[i]) {
+				primes.push(i)
+				for (let j = i * i; j <= endRoot; j += i) { // smaller j is filtered by (i-1) * i
+					sieve[j] = false
+				}
+			}
+		}
+		const range_sieve = Array.from({ length: increment + 1 }, () => true)
+		if (start === 0) {
+			range_sieve[0] = false
+		}
+		if (1 - start >= 0) {
+			range_sieve[1 - start] = false
+		}
+		for (const p of primes) {
+			// Find a num, start <= num <= end, such that num = p * k, k \in N+ and k >= p
+			const num = Math.max(p * p, Math.floor((start + p - 1) / p) * p)
+			for (let i = num; i <= end; i += p) {
+				range_sieve[i - start] = false
+			}
+		}
+		return range_sieve.reduce((p, v) => p + (+v), 0)
 	}
-} as const
-
-// console.log(((contract) => {
-//     const data = contract.data
-//     const endRow = data.length - 1
-//     const minSum = Array.from({ length: data.length }, (_, i) => Array.from({ length: data[i].length }, () => Infinity))
-//     const q: { i: number, j: number, sum: number }[] = [{ i: 0, j: 0, sum: data[0][0] }]
-//     minSum[0][0] = data[0][0]
-//     let min = Infinity
-//     while (q.length > 0) {
-//         const { i, j, sum } = q.shift()!
-//         if (i === endRow) {
-//             min = Math.min(min, sum)
-//             continue
-//         }
-//         if (minSum[i][j] < sum) {
-//             continue
-//         }
-//         for (const nj of [j, j + 1]) {
-//             const ni = i + 1
-//             if (ni <= endRow && nj < minSum[ni].length && (minSum[ni][nj] === -1 || minSum[ni][nj] > (sum + data[ni][nj]))) {
-//                 minSum[ni][nj] = sum + data[ni][nj]
-//                 q.push({ i: ni, j: nj, sum: sum + data[ni][nj] })
-//             }
-//         }
-//     }
-//     return min
-// })({ data: [[1], [9, 5], [4, 5, 4], [2, 2, 5, 5], [8, 2, 1, 4, 4], [1, 7, 3, 6, 2, 8], [9, 2, 2, 2, 6, 4, 6], [9, 8, 3, 2, 9, 8, 4, 5], [1, 9, 8, 8, 6, 2, 6, 4, 7], [8, 6, 5, 6, 3, 8, 8, 3, 3, 1], [7, 9, 9, 2, 1, 6, 2, 5, 5, 5, 4]] }))
+}
 
 // Add this to avoid eslint matching, just erase the syntax
 export function solveSync<T extends CodingContractName>(
@@ -775,3 +847,8 @@ export function solveSync<T extends CodingContractName>(
 ) {
 	return ContractSolves[contract.type](contract)
 }
+
+console.log(solveSync({
+	type: "Proper 2-Coloring of a Graph",
+	data: [9, [[4, 7], [4, 8], [0, 3], [1, 8], [4, 6], [5, 6], [1, 7], [0, 7], [4, 6], [5, 8], [0, 6]]]
+} as CodingContractObject))

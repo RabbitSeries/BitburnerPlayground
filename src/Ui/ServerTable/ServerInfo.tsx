@@ -22,7 +22,7 @@ export function ServerInfoObject(ns: NS, rowId: number, host: string): Record<Ta
 		"Money": (
 			<td>
 				{formatNumber(server.moneyAvailable ?? 0, 1)} / {formatNumber(server.moneyMax ?? 0, 1)}
-				{`(${server.moneyMax ? ns.format.percent(server.moneyAvailable ?? 0 / server.moneyMax, 1) : "N/A"})`}
+				{`(${server.moneyMax ? ns.format.percent((server.moneyAvailable ?? 0) / server.moneyMax, 1) : "N/A"})`}
 			</td>
 		),
 		"Security": (

@@ -2,20 +2,14 @@ import type { NS } from "@ns"
 import React, { useEffect, useRef } from "react"
 import { FindPathTo, ScanAllServers, TryNuke } from "/Hack/HackHelpers"
 import { upgradeLevelBy, upgradeLevelTo } from "/HacknetBuyer"
-import { StopToken, type JThread, type ProcessHandle } from "../OS/Process"
-import {
-	MemSharer,
-	MinerPaths,
-	RegularMiner,
-	SingleTaskMiner,
-	type MinerPathSignatures
-} from "../../Hack/Miners/Miners"
-import { HackTask } from "/Hack/HackHelpers"
+import { type JThread, type ProcessHandle } from "../OS/Process"
+import { MemSharer, MinerPaths, type ScriptPathSignatures } from "../../Hack/Miners/Miners"
 import type { Sorter } from "/utils/Comparators"
 import { FreeRam } from "/utils/ServerStat"
-import { FullScheduler, Schedulers } from "../../Hack/Schedulers/Schedulers"
 import { PuchaseServer } from "/ServerBuyer"
-// import { SolveContract } from "/Contract/Scanner"
+// import { Ratio } from "/Hack/Schedulers/Ratio"
+// import * as ContractSolver from "/Contract/Scanner"
+
 interface Notification {
 	action: "Expand" | "Collapse"
 }
@@ -153,81 +147,6 @@ export function Toolbar({
 			</button>
 			<button onClick={() => handle.close()}>Shut Down</button>
 			<button
-				onClick={() =>
-					ns
-						.prompt("Specify target", {
-							type: "select",
-							choices: ScanAllServers(ns).sorted.toSorted(ranker)
-						})
-						.then((r) => `${r}`)
-						.then(async (targetName) => {
-							if (targetName.length === 0) {
-								return
-							}
-							ns.prompt("Specify Miner", {
-								type: "select",
-								choices: [
-									MinerPaths.RegularMiner.scriptPath,
-									MinerPaths.SingleTaskMiner.scriptPath,
-									"FullScheduler"
-								]
-							}).then(async (choice) => {
-								if (choice === MinerPaths.RegularMiner.scriptPath) {
-									new RegularMiner(ns, {
-										hostName: "home",
-										targetName,
-										threadOptions: Math.floor(
-											(ns.getServerMaxRam("home") -
-												ns.getServerUsedRam("home")) /
-											ns.getScriptRam(MinerPaths.RegularMiner.scriptPath)
-										)
-									}).run()
-								} else if (choice === MinerPaths.SingleTaskMiner.scriptPath) {
-									const task = await ns.prompt("Specify task", {
-										type: "select",
-										choices: [HackTask.Hack, HackTask.Weaken, HackTask.Grow]
-									})
-									if (task.toString() in HackTask) {
-										new SingleTaskMiner(ns, {
-											hostName: "home",
-											targetName,
-											task: task.toString() as HackTask
-										}).run()
-									}
-								} else if (choice === "FullScheduler") {
-									// ns.print("WARN: This attached session may cause leak problem!")
-									if (
-										FreeRam.bind(ns)("home") <
-										ns.getScriptRam(Schedulers.FullScheduler.scriptPath)
-									) {
-										const stop_token = new StopToken()
-										AttachedHomeSession.current.push({
-											name: "FullScheduler",
-											stop_token,
-											task: FullScheduler.attach(
-												ns,
-												targetName,
-												["home"],
-												() => { },
-												() => { },
-												stop_token
-											)
-										})
-									} else {
-										new FullScheduler(ns, targetName, ["home"]).run()
-									}
-								} else {
-									return
-								}
-								ns.print("Started " + choice)
-							})
-						})
-						.catch(ns.tprint)
-				}
-			>
-				Use Home Resources
-			</button>
-			<button
 				onClick={async () =>
 					ns
 						.prompt("2^{Ram}:", { type: "text" })
@@ -291,7 +210,7 @@ export function Toolbar({
 											.toSorted(ranker)
 									}),
 									script: MinerPaths[
-										script.toString() as keyof MinerPathSignatures
+										script.toString() as keyof ScriptPathSignatures
 									].scriptPath
 								}
 							}
@@ -312,20 +231,10 @@ export function Toolbar({
 			>
 				Simulate Script
 			</button>
-			{/* <button onClick={() => SolveContract(ns)}>Solve contracts</button> */}
-			<button
-				onClick={async () => {
-					const ws = new WebSocket("locolhost:12525")
-					const refreshDefinitionFile = {
-						jsonrpc: "2.0",
-						id: 0,
-						method: "getDefinitionFile"
-					}
-					ws.send(JSON.stringify(refreshDefinitionFile))
-				}}
-			>
-				Refresh Definition File
-			</button>
+			<button onClick={() => {
+				// Ratio(ns,)
+			}}>Arrange Ratio Scheduler</button>
+			{/* <button onClick={() => ContractSolver.main(ns)}>Solve contracts</button> */}
 		</div>
 	)
 }

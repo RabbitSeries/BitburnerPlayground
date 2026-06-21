@@ -104,7 +104,7 @@ export function ScheduleWeakenTask(
 			continue
 		}
 		// |=weaken 1======================================|
-		const pid = new WeakenMiner(ns, host, target, threadBoost, 0).run()
+		const pid = new WeakenMiner(ns, { hostName: host, targetName: target, threadOption: threadBoost }, 0).run()
 		totalWeakened += ns.weakenAnalyze(threadBoost, cores)
 		postHandler(ns, host)
 		if (pid !== 0) {
@@ -147,10 +147,10 @@ export function ScheduleHackTask(
 				growTime: lagBase + weakenTime + 100 - growTime,
 				weaken2Time: lagBase + 200
 			}
-			new HackMiner(ns, host, target, hThread, aligns.HackTime).run()
-			new WeakenMiner(ns, host, target, wThread1, aligns.weaken1Time).run()
-			new GrowMiner(ns, host, target, gThread, aligns.growTime).run()
-			lastTaskPid = new WeakenMiner(ns, host, target, wThread2, aligns.weaken2Time).run()
+			new HackMiner(ns, { hostName: host, targetName: target, threadOption: hThread }, aligns.HackTime).run()
+			new WeakenMiner(ns, { hostName: host, targetName: target, threadOption: wThread1 }, aligns.weaken1Time).run()
+			new GrowMiner(ns, { hostName: host, targetName: target, threadOption: gThread }, aligns.growTime).run()
+			lastTaskPid = new WeakenMiner(ns, { hostName: host, targetName: target, threadOption: wThread2 }, aligns.weaken2Time).run()
 		}
 		postHandler(ns, host)
 		if (lastTaskPid !== 0) {
@@ -192,8 +192,8 @@ export function ScheduleGrowTask(
 			weakenTime: lagBase,
 			growTime: lagBase + weakenTime - 100 - growTime
 		}
-		new GrowMiner(ns, host, target, gThread, aligns.growTime).run()
-		lastTaskPid = new WeakenMiner(ns, host, target, wThread, aligns.weakenTime).run()
+		new GrowMiner(ns, { hostName: host, targetName: target, threadOption: gThread }, aligns.growTime).run()
+		lastTaskPid = new WeakenMiner(ns, { hostName: host, targetName: target, threadOption: wThread }, aligns.weakenTime).run()
 		try {
 			totalGrowed *= ns.formulas.hacking.growPercent(
 				ns.getServer(target) as Server,

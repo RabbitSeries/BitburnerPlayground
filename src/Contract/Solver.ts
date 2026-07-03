@@ -1,4 +1,6 @@
-import type { CodingContractName, CodingContractObject, CodingContractSignatures } from "@ns"
+import type {
+	CodingContractName, CodingContractObject, CodingContractSignatures
+} from "@ns"
 
 class SmallHeap<T> {
 	constructor(private sorter: (a: T, b: T) => number) { }
@@ -10,10 +12,12 @@ class SmallHeap<T> {
 	private sift_down(i: number) {
 		while (i < this.q.length) {
 			let minimal = i
-			if (i * 2 + 1 < this.size && this.sorter(this.q[i * 2 + 1], this.q[minimal]) < 0) {
+			if (i * 2 + 1 < this.size &&
+				this.sorter(this.q[i * 2 + 1], this.q[minimal]) < 0) {
 				minimal = i * 2 + 1
 			}
-			if (i * 2 + 2 < this.size && this.sorter(this.q[i * 2 + 2], this.q[minimal]) < 0) {
+			if (i * 2 + 2 < this.size &&
+				this.sorter(this.q[i * 2 + 2], this.q[minimal]) < 0) {
 				minimal = i * 2 + 2
 			}
 			if (minimal !== i) {
@@ -185,24 +189,35 @@ export const ContractSolves: {
 		return max
 	},
 	"Total Ways to Sum": ({ data }) => {
-		const count = Array.from<number[]>({ length: data + 1 }).map(() => new Map<number, number>())
-		count[0].set(0, 1)
+		// contains is the count of numbers to synthesise the target number
+		// const count = Array.from<number[]>({ length: data + 1 }).map(() => new Map<number, number>())
+		// count[0].set(0, 1)
+		// for (let i = 1; i <= data; i++) {
+		// 	for (let j = i; j <= data; j++) {
+		// 		for (const [contains, ways] of count[j - i]) {
+		// 			count[j].set(contains + 1, (count[j].get(contains + 1) ?? 0) + ways)
+		// 		}
+		// 	}
+		// }
+		// return count[data]
+		// 	.entries()
+		// 	.filter(([contains]) => contains >= 2)
+		// 	.map(([, ways]) => ways)
+		// 	.reduce((a, b) => a + b, 0)
+
+		// It is actually the same as this:
+		// This is actually a multiple knapsnack problem
+		const count = Array(data + 1).fill(0)
+		count[0] = 1
 		for (let i = 1; i <= data; i++) {
 			for (let j = i; j <= data; j++) {
-				for (const [contains, ways] of count[j - i]) {
-					count[j].set(contains + 1, (count[j].get(contains + 1) ?? 0) + ways)
-				}
+				count[j] += count[j - i]
 			}
 		}
-		return count[data]
-			.entries()
-			.filter(([contains]) => contains >= 2)
-			.map(([, ways]) => ways)
-			.reduce((a, b) => a + b, 0)
+		return count[data] - 1 // Minus the formula data = data which contains only one synthesise number.
 	},
 	"Total Ways to Sum II": ({ data }) => {
-		const num = data[0],
-			part = data[1]
+		const [num, part] = [data[0], data[1]]
 		const ways = Array.from({ length: num + 1 }, () => 0)
 		ways[0] = 1
 		for (let i = 1; i <= part.length; i++) {

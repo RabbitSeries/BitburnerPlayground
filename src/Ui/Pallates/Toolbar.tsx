@@ -147,18 +147,29 @@ export function Toolbar({
 			</button>
 			<button onClick={() => handle.close()}>Shut Down</button>
 			<button
-				onClick={async () =>
-					ns
-						.prompt("2^{Ram}:", { type: "text" })
-						.then((r) => {
-							if (r.toString().length > 0) {
-								return PuchaseServer(ns, 2 ** +r)
-							} else {
-								return "Invalid ram"
-							}
-						})
-						.then(ns.print)
-						.catch(ns.tprint)
+				onClick={async () => {
+					const wallet = ns.getServerMoneyAvailable("home")
+					let avai = 21
+					while (avai--) {
+						if (wallet >= ns.cloud.getServerCost(2 ** avai)) {
+							break
+						}
+					}
+					if (avai < 0) {
+						ns.prompt(`You are too poor.`)
+					} else {
+						ns.prompt(`2^{Ram} GB (0-${avai}):`, { type: "text" })
+							.then((r) => {
+								if (r.toString().length > 0) {
+									return PuchaseServer(ns, 2 ** Math.min(20, +r))
+								} else {
+									return "Invalid ram"
+								}
+							})
+							.then(ns.prompt)
+							.catch(ns.prompt)
+					}
+				}
 				}
 			>
 				Purchase a server
@@ -235,6 +246,6 @@ export function Toolbar({
 				// Ratio(ns,)
 			}}>Arrange Ratio Scheduler</button>
 			{/* <button onClick={() => ContractSolver.main(ns)}>Solve contracts</button> */}
-		</div>
+		</div >
 	)
 }

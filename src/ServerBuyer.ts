@@ -1,8 +1,8 @@
 import type { NS } from "@ns"
 export function PuchaseServer(ns: NS, ram: number) {
 	const cloud = ns.cloud
-	const i = ns.hacknet.numNodes()
-	const cost = ns.hacknet.getRamUpgradeCost(ram)
+	const i = cloud.getServerNames().length
+	const cost = cloud.getServerCost(ram)
 	const wallet = ns.getServerMoneyAvailable("home")
 	if (i < cloud.getServerLimit()) {
 		if (wallet >= cost) {
@@ -11,6 +11,17 @@ export function PuchaseServer(ns: NS, ram: number) {
 			return `Too Expensive ${ns.format.number(wallet)}/${ns.format.number(cost)}`
 		}
 	} else {
+		for (const serverName of ns.cloud.getServerNames()) {
+			if (ns.getServer(serverName).maxRam < ram) {
+				if (wallet >= cost) {
+					cloud.deleteServer(serverName)
+					return `Bought ${cloud.purchaseServer(serverName, ram)}`
+				} else {
+					return `You are holding ${i} servers, but not affluent to`
+						+ ` afford upgrading the server to ${ram} GB`
+				}
+			}
+		}
 		return `Limit Exceeded Holding ${i} Servers`
 	}
 }

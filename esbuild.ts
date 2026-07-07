@@ -44,8 +44,7 @@ const ctx = await context({
 })
 await ctx.watch()
 await ctx.rebuild()
-console.log("First build finished.")
 
 /* ----------------------- RemoteAPI Interoperation -------------------- */
 await startWebsocketServer()
-console.log("Server started.")
+console.log("[server] Server started.")

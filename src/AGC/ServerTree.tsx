@@ -1,7 +1,7 @@
 import type { NS } from "@ns"
 import React, { useEffect, useRef, useState } from "react"
 import type { TableHeaderMeta } from "../UI/ServerTable/TableHeaderMeta"
-import { ServerInfoObject } from "/UI/ServerTable/ServerInfo"
+import { ServerInfoObject } from "../UI/ServerTable/ServerInfo"
 
 export type ServerNode = {
 	name: string

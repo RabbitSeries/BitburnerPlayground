@@ -2,6 +2,8 @@ import type { CodingContractName, CodingContractObject, NS } from "@ns"
 import { ScanAllServers } from "/Hack/HackHelpers"
 import { ContractSolves, solveSync } from "./Solver"
 import type { MessageData, ResultData } from "./Communication"
+import { ProgressBar, type PendingTask } from "../UI/Pallates/ProgressBar"
+import React from "react"
 
 type WorkerDetail = { worker: Worker, url: string, avai: boolean }
 type Messenger = ((ev: MessageEvent) => void)
@@ -100,6 +102,21 @@ async function solveAsync(contract: CodingContractObject, pool: WorkerPool) {
 export async function main(ns: NS) {
 	// Gloabl using seems not able to be auto disposed if executed in game
 	const contractApi = ns.codingcontract
+	const messageBuilder = (
+		file: string,
+		host: string,
+		reason: string,
+		result: ReturnType<typeof solveSync> | undefined
+	) => {
+		const contract = contractApi.getContract(file, host)
+		return [
+			`Contract ${contract.type}(${file}) failed `,
+			`on server ${host}:`,
+			`Reason: ${reason}`,
+			`Data: ${contract.data}`,
+			`My guess: ${result}`
+		].join("\n")
+	}
 	using workerPool = new WorkerPool()
 	const measureTime = async (fun: () => Promise<void>) => {
 		const now = Date.now()
@@ -110,57 +127,61 @@ export async function main(ns: NS) {
 	const solveMode = await ns.prompt("Select a scanner mode",
 		{ type: "select", choices: [...choices] }) as (typeof choices)[number]
 	const getContractName = async () => {
-		return await ns.prompt("Select a contract",
-			{
-				type: "select",
-				choices: ["ALL", ...Object.keys(ContractSolves)]
-			}) as string
+		return await ns.prompt("Select a contract", {
+			type: "select",
+			choices: ["ALL", ...Object.keys(ContractSolves)]
+		}) as string
 	}
 	if (solveMode === "Solve") {
-		await measureTime(async () => {
-			const launchedTasks: {
-				file: string,
-				host: string, task: Promise<ReturnType<typeof solveSync>>
-			}[] = []
-			workerPool.setPoolSize(6, ns.read("Contract/Worker.js"))
-			for (const host of ["home", ...ScanAllServers(ns).sorted]) {
-				for (const file of ns.ls(host, ".cct")) {
-					const contract = contractApi.getContract(file, host)
-					launchedTasks.push({
-						file,
-						host,
-						task: solveAsync(contract, workerPool)
-					})
-				}
-			}
-			const failed: {
-				file: string, host: string,
-				reason: string, result: ReturnType<typeof solveSync>
-			}[] = []
-			for (let i = 1; i <= launchedTasks.length; i++) {
-				const { file, host, task } = launchedTasks[i - 1]
-				ns.tprint(`[${i}/${launchedTasks.length}] Attempting `
-					+ file + " on server " + host)
-				try {
-					const result = await task
-					const msg = contractApi.attempt(await task, file, host)
-					if (!msg.length) {
-						failed.push({ file, host, reason: "Failed", result })
-					}
-				} catch (reason) {
-					failed.push({
-						file, host, reason: `Exception: ${reason}`,
-						result: null
-					})
-				}
-			}
-			for (const { file, host, reason, result } of failed) {
+		const launchedTasks: PendingTask[] = []
+		workerPool.setPoolSize(6, ns.read("Contract/Worker.js"))
+		for (const host of ["home", ...ScanAllServers(ns).sorted]) {
+			for (const file of ns.ls(host, ".cct")) {
 				const contract = contractApi.getContract(file, host)
-				ns.tprint(`Contract ${contract.type}(${file}) failed ` +
-					`on server ${host}: ${reason}`)
-				ns.tprintRaw(`Data: ${contract.data}`)
-				ns.tprintRaw(`My guess: ${result}`)
+				launchedTasks.push({
+					waitMessage: `Attempting ${file} on server ${host}`,
+					task: solveAsync(contract, workerPool).then((result) => {
+						try {
+							if (!contractApi.attempt(result, file,
+								host).length) {
+								return {
+									id: `${file}: ${host}`,
+									reason: messageBuilder(
+										file,
+										host,
+										`Failed with result ${result}`,
+										result
+									)
+								}
+							}
+						} catch (reason) {
+							return {
+								id: `${file}: ${host}`,
+								reason: messageBuilder(
+									file,
+									host,
+									`Attempt exception: ${reason}`,
+									result
+								)
+							}
+						}
+					}).catch((reason) => {
+						return {
+							id: `${file}:${host} `,
+							reason: messageBuilder(
+								file,
+								host,
+								`Webworker Exception: ${reason} `,
+								null
+							)
+						}
+					})
+				})
 			}
+		}
+		await new Promise<void>((resolve) => {
+			ns.tprintRaw(<ProgressBar tasks={launchedTasks}
+				resolve={resolve} />)
 		})
 	} else if (solveMode === "Test") {
 		const total = await (ns.prompt("Round for each contract", {
@@ -186,7 +207,8 @@ export async function main(ns: NS) {
 			if (contractName === "ALL") {
 				const taskList = Object.keys(ContractSolves).map(name => {
 					return {
-						name, task: runTests(
+						name,
+						task: runTests(
 							ns,
 							name as CodingContractName,
 							total,

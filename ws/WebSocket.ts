@@ -170,15 +170,16 @@ export async function startWebsocketServer() {
 			}
 		})
 		if (config.cleanServers) {
-			await iterateServers(async (server) => {
-				await getFilenames(socket, server)
-					.then((filenames) => {
-						for (const filename of validateFilenames(filenames)) {
-							deleteFile(filename, socket, server)
-						}
-					})
-					.catch((err) => console.log(`Failed to retrieve filenames: ${{ server, err }}`))
-			})
+			await iterateServers((server) => getFilenames(socket, server)
+				.then((filenames) => {
+					for (const filename of validateFilenames(filenames)) {
+						deleteFile(filename, socket, server)
+					}
+				})
+				.catch((err) =>
+					console.log(`Failed to retrieve filenames:` +
+						`${{ server, err }}`))
+			)
 		}
 		if (config.pushAllOnStart) {
 			const filenames = await glob(`${config.playground}/**/*`)

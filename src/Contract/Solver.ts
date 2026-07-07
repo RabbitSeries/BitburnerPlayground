@@ -141,6 +141,7 @@ const HammingEncode = (data: number) => {
 	return encoded.join("")
 }
 
+
 const HammingDecode = (data: string) => {
 	const binary = [...data].map((v) => parseInt(v)) as (0 | 1)[]
 	const verification = Parity(binary)

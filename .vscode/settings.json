@@ -9,7 +9,7 @@
 		}
 	],
 	"[typescript]": {
-		"editor.defaultFormatter": "vscode.typescript-language-features"
+		"editor.defaultFormatter": "dbaeumer.vscode-eslint"
 	},
 	"editor.renderWhitespace": "all",
 	"editor.unicodeHighlight.invisibleCharacters": true

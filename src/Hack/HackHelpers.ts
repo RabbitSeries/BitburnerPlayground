@@ -137,6 +137,8 @@ export function ShareOn(ns: NS, host: string, time?: number): Promise<void> {
 		new MemSharer(
 			ns,
 			host,
+
+			
 			Math.floor(FreeRam.bind(ns)(host) / ns.getScriptRam(MinerPaths.MemSharer.scriptPath))
 		).run()
 		if (time !== undefined) {

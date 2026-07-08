@@ -1,8 +1,20 @@
-import type { NS } from "@ns"
+// import type { NS } from "@ns"
 import React from "react"
 
-export function Ratio(props: { ns: NS }) {
-    return <svg>
-        <p />
-    </svg>
+export function Ratio() {
+    // return <svg>
+    //     <p />
+    // </svg>
+
+    return <div>
+        <div>
+
+
+
+
+
+            <input type="range"></input   >
+        </div>
+        <button>Launch</button>
+    </div>
 }

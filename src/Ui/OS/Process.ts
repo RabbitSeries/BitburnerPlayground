@@ -8,17 +8,17 @@
  * @returns void
  */
 export interface ProcessHandle {
-	close: () => void
+    close: () => void
 }
 export class StopToken {
-	stopping: boolean = false
-	reqeust_stop = () => {
-		this.stopping = true
-	}
-	is_stop_requested = () => this.stopping
+    stopping: boolean = false
+    reqeust_stop = () => {
+        this.stopping = true
+    }
+    is_stop_requested = () => this.stopping
 }
 export interface JThread {
-	name: string
-	stop_token: StopToken
-	task: Promise<void>
+    name: string
+    stop_token: StopToken
+    task: Promise<void>
 }

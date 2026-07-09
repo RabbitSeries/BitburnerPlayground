@@ -12,5 +12,6 @@
 		"editor.defaultFormatter": "dbaeumer.vscode-eslint"
 	},
 	"editor.renderWhitespace": "all",
-	"editor.unicodeHighlight.invisibleCharacters": true
+	"editor.unicodeHighlight.invisibleCharacters": true,
+	"vsicons.presets.angular": true
 }

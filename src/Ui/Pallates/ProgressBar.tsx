@@ -1,12 +1,11 @@
-// A progress bar is meant to display the status of a set of tasks
-
 import React, { useCallback, useEffect, useRef, useState } from "react"
 
 export type FailureReason = { id: string, reason: string }
 export type PendingTask = {
     waitMessage: string, task: Promise<FailureReason | undefined>,
 }
-// The only argument should be the taskList
+
+// A progress bar is meant to display the status of a set of tasks
 export function ProgressBar(config: {
     tasks: PendingTask[],
     resolve: () => void // parent script can then exit main
@@ -61,7 +60,7 @@ export function ProgressBar(config: {
             // config.performanceResult = `Outcome: ${failedTasks.length}/${total}`
             if (failedTasks.length && failedSelection.current) {
                 // Dom manipulation is not a best practice in react.
-                // failedSelection.current.add() 
+                // failedSelection.current.add()
                 setRevealed(true)
                 setOptions(failedTasks.map(({ id }) => id))
                 onSelectChange()
@@ -70,7 +69,7 @@ export function ProgressBar(config: {
         }
         logger()
         return () => { }
-    }, [])// explicit empty dependency list to be called only once
+    })
     // But useEffect will be called again if it is unmounted and mouneted back.
     return <div>
         <label>{`${taskStat} -- ${elapsed.toFixed(4)}`}</label>

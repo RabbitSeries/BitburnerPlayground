@@ -8,7 +8,7 @@ import { ScanAllServers } from "../HackHelpers";
 import type { IMinerArgs } from "../Miners/IMiner";
 
 /**
- * 
+ *
  * @param ns NS api
  * @param threads hack, weaken1, grow, weaken2
  */
@@ -30,6 +30,8 @@ function allocateOnServer(ns: NS, threads: [number, number, number, number],
 
 export function Ratio(ns: NS, threads: [number, number, number, number],
     targetName: string) {
+    const total = threads.reduce((a,b) => a+b)
+    threads = threads.map(a=>a/total) as typeof threads
     for (const hostName of ScanAllServers(ns).sorted) {
         if (ns.hasRootAccess(hostName)) {
             const allocation = allocateOnServer(ns, threads, hostName)
@@ -37,7 +39,8 @@ export function Ratio(ns: NS, threads: [number, number, number, number],
             const argsList: IMinerArgs[] = allocation.map(alloc => {
                 if (!alloc) {
                     allArgPositive = false
-                } return { hostName, targetName, threadOption: alloc }
+                }
+                return { hostName, targetName, threadOption: alloc }
             })
             if (allArgPositive) {
                 new HackMiner(ns, argsList[0], 0).run()

@@ -10,22 +10,19 @@ export function ProgressBar(config: {
     tasks: PendingTask[],
     resolve: () => void // parent script can then exit main
 }) {
-    const [options, setOptions] = useState<string[]>([])
     const [elapsed, setElapsed] = useState(0)
     const [resultRevealed, setRevealed] = useState(false)
-    const [failedTasks] = useState<FailureReason[]>([])
-    const [performanceResult, setResult] = useState(0)
+    const [failedTasks, setFailedTasks] = useState<FailureReason[]>([])
     const [taskStat, setStat] = useState<string>("")
-    const [reason, setReason] = useState<string>("")
+    const [reasonId, setId] = useState(-1)
 
     const failedSelection = useRef<HTMLSelectElement>(null)
 
     const onSelectChange = useCallback(() => {
         if (failedSelection.current) {
-            const seleted = failedSelection.current!.selectedIndex
-            setReason(failedTasks[seleted].reason)
+            setId(failedSelection.current!.selectedIndex)
         }
-    }, [failedTasks]) // Actually failedTasks won't change
+    }, []) // Actually failedTasks won't change
 
     // call effect handler only once
     useEffect(() => {
@@ -37,32 +34,27 @@ export function ProgressBar(config: {
                 // setElapsed(elapsed + (Date.now() - nowTime) / 1000)
                 setElapsed((Date.now() - nowTime) / 1000)
             }, 100)
-            const total = config.tasks.length
-            const fetchFaildTasks = async () => {
-                let i = 0
-                // while shift will change config prop, which is not
-                // a best practice
-                for (const { waitMessage, task } of config.tasks) {
-                    setStat(`[${i + 1}/${total}]: ${waitMessage}`)
-                    // ! stale closure
-                    // `${elapsed.toPrecision(2)} s`)
-                    i++
-                    const stat = await task
-                    if (stat) {
-                        failedTasks.push(stat)
-                    }
+            const failedTasksLocal : FailureReason[] = []
+            // while shift will change config prop, which is not a best
+            // practice
+            for (let i = 1; i <= config.tasks.length ; i++) {
+                const { waitMessage, task } = config.tasks[i - 1]
+                setStat(`[${i}/${config.tasks.length}]: ${waitMessage}`)
+                // ! stale closure
+                // `${elapsed.toPrecision(2)} s`)
+                const stat = await task
+                if (stat) {
+                    failedTasksLocal.push(stat)
                 }
             }
-            await fetchFaildTasks()
             clearInterval(itvId)
             setElapsed((Date.now() - nowTime) / 1000)
-            setResult(failedTasks.length)
+            setFailedTasks(failedTasksLocal)
             // config.performanceResult = `Outcome: ${failedTasks.length}/${total}`
-            if (failedTasks.length && failedSelection.current) {
+            if (failedTasksLocal.length && failedSelection.current) {
                 // Dom manipulation is not a best practice in react.
                 // failedSelection.current.add()
                 setRevealed(true)
-                setOptions(failedTasks.map(({ id }) => id))
                 onSelectChange()
             }
             config.resolve()
@@ -74,18 +66,22 @@ export function ProgressBar(config: {
     return <div>
         <label>{`${taskStat} -- ${elapsed.toFixed(4)}`}</label>
         <div hidden={!resultRevealed}>{
-            `Outcome: ${config.tasks.length -
-            performanceResult}/${config.tasks.length}, Failed: ` +
-            performanceResult}
+            `Outcome: ${config.tasks.length - failedTasks.length}/` +
+            `${config.tasks.length}, Failed: ${failedTasks.length}`
+        }
         </div>
         <div hidden={!resultRevealed}>
             Reason id:
-            <select ref={failedSelection}
-                onChange={onSelectChange}>
-                {options.map((option, i) =>
-                    <option key={`${i}`} value={option}>{option}</option>)}
+            <select ref={failedSelection} onChange={onSelectChange}>{
+                failedTasks.map(({id}) =>
+                    <option key={`${id}`} value={id}>{id}</option>)
+            }
             </select>
         </div>
-        <div hidden={!resultRevealed}>{reason}</div>
+        <div hidden={!resultRevealed}>{
+            reasonId >= 0 && failedTasks.length >= 1 ?
+                failedTasks[reasonId].reason : ""
+        }
+        </div>
     </div>
 }

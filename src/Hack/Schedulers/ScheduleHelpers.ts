@@ -134,8 +134,8 @@ export function ScheduleHackTask(
             if (threadBoost === null) break
             const { hThread, wThread1, gThread, wThread2, ram } = threadBoost
             remainRam -= ram
-            //! Don't change the constants!!!!!!!!!!!
-            //! Not worth it!!!!
+            // ! Don't change the constants!!!!!!!!!!!
+            // ! Not worth it!!!!
             const lagBase = scheduled++ * 200
             //                    |= hack ====================|
             // |=weaken 1======================================|

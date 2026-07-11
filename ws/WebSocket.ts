@@ -25,13 +25,16 @@ function isResponseOK(r : ResponseShaped){
 }
 
 function rString(r : ResponseShaped){
-    return `${isResponseOK(r) ? r.result: r.error}`
+    return `${isResponseOK(r) ? r.result : r.error}`
 }
 
 class Handler {
-    private messageHandlers: Map<number, { handle: (json: object) => Promise<void>, method: string }> = new Map()
+    private messageHandlers: Map<number,
+        { handle: (json: object) => Promise<void>,
+          method: string }> = new Map()
     private messageKeys: number[] = []
-    public setHandler(id: number, method: string, handler: (json: object) => Promise<void>) {
+    public setHandler(id: number, method: string,
+        handler: (json: object) => Promise<void>) {
         this.messageHandlers.set(id, { handle: handler, method })
         this.messageKeys.push(id)
     }
@@ -42,7 +45,7 @@ class Handler {
             const id = r.data!.id
             if (this.messageHandlers.has(id)) {
                 const { handle, method } = this.messageHandlers.get(id)!
-                await handle(obj).then(() =>{
+                await handle(obj).then(() => {
                     if(config.loggingLevel >= LoggingLevel.Info){
                         console.log({ stat: "OK", id: r.data.id, method })
                     }
@@ -50,12 +53,14 @@ class Handler {
                 ).catch((reason) =>
                 {
                     if(config.loggingLevel >= LoggingLevel.Error){
-                        console.log(`Error when handling message ${{ json, id }} - ${reason}`)
+                        console.log(`Error when handling message ` +
+                             `${{ json, id }} - ${reason}`)
                     }
                 }
                 )
             } else {
-                console.log('Incoming message does not have a registered handler.')
+                console.log('Incoming message ' +
+                    'does not have a registered handler.')
             }
         } else {
             console.log(`Failed to find id in incomming message ${json}.`)
@@ -70,7 +75,8 @@ class Handler {
 const handler = new Handler()
 let messageId = 0
 const filters = new Set(config.filters)
-const ingameFileName = (file: string) => path.relative(config.playground, file).replaceAll(/\\/g, "/")
+const ingameFileName = (file: string) =>
+    path.relative(config.playground, file).replaceAll(/\\/g, "/")
 
 const validateFilenames = (filenames: string[]) =>
     filenames.filter((name) => filters.has(path.extname(name)))
@@ -139,19 +145,21 @@ export async function getFilenames(socket: WebSocket, server: string) {
                 return reject("Timeout")
             }
         }, 5000)
-        handler.setHandler(filenamesRequest.id, filenamesRequest.method, async (json) => {
-            const filenames = GetFileNamesResponse.parse(json)
-            if (isResponseOK(filenames)) {
-                return resolve(filenames.result)
-            }
-            reject("Failed")
-            finished = true
-        })
+        handler.setHandler(filenamesRequest.id, filenamesRequest.method,
+            async (json) => {
+                const filenames = GetFileNamesResponse.parse(json)
+                if (isResponseOK(filenames)) {
+                    return resolve(filenames.result)
+                }
+                reject("Failed")
+                finished = true
+            })
         socket.send(JSON.stringify(filenamesRequest))
     })
 }
 
-export function deleteFile(filename: string, socket: WebSocket, server: string) {
+export function deleteFile(
+    filename: string, socket: WebSocket, server: string) {
     const fileDeletion: DeleteFile = {
         jsonrpc: "2.0",
         id: messageId++,
@@ -197,15 +205,19 @@ export function startWebsocketServer() {
                 })
                 .catch((err) =>
                     console.log(`Failed to retrieve filenames:` +
-						`${{ server, err }}`))
+                                `${{ server, err }}`))
             )
         }
         if (config.pushAllOnStart) {
             const filenames = await glob(`${config.playground}/**/*`)
             for (const filename of validateFilenames(filenames)) {
-                const p = path.resolve("./src", path.relative(path.resolve("dist", "out"), path.resolve(filename)))
-                if (existsSync(p.replace(".js", ".ts")) || existsSync(p.replace(".js", ".tsx"))) {
-                    iterateServers((server) => pushFile(filename, socket, server))
+                const p = path.resolve("./src", path.relative(
+                    path.resolve("dist", "out"),
+                    path.resolve(filename)))
+                if (existsSync(p.replace(".js", ".ts")) ||
+                existsSync(p.replace(".js", ".tsx"))) {
+                    iterateServers((server) =>
+                        pushFile(filename, socket, server))
                 } else {
                     rmSync(filename)
                 }
@@ -224,9 +236,7 @@ function setupWatcher(socket: WebSocket) {
         if (!filters.has(path.extname(p))) {
             return
         }
-        for (const server of config.servers) {
-            pushFile(p, socket, server)
-        }
+        iterateServers((server => pushFile(p, socket, server)))
     }
     watcher.on("add", addOrChange)
     watcher.on("change", addOrChange)
@@ -234,8 +244,7 @@ function setupWatcher(socket: WebSocket) {
         if (!filters.has(path.extname(p))) {
             return
         }
-        for (const server of config.servers) {
-            deleteFile(ingameFileName(p), socket, server)
-        }
+        iterateServers((server =>
+            deleteFile(ingameFileName(p), socket, server)))
     })
 }

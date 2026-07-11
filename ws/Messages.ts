@@ -50,7 +50,8 @@ function ResponseShaped<T extends z.core.SomeType>(t: T) {
         jsonrpc: z.literal("2.0"),
         id: z.number(),
     }).and(z.union([
-        z.object({error: z.any()}), // z.any() is not optional since around https://github.com/susumutomita/TenkaCloud/pull/1619
+        z.object({error: z.string()}), // z.any() is not optional since around
+        // https://github.com/susumutomita/TenkaCloud/pull/1619
         z.object({
             result: t// even z.undefined() is not optional
         })
@@ -58,15 +59,19 @@ function ResponseShaped<T extends z.core.SomeType>(t: T) {
 }
 
 const StatusShaped = z.literal("OK")
-const MetadataShaped = FileNameShaped.extend({ atime: z.string(), btime: z.string(), mtime: z.string() })
+const MetadataShaped = FileNameShaped.extend({ atime: z.string(),
+                                               btime: z.string(),
+                                               mtime: z.string() })
 export const AnyResponse = ResponseShaped(z.any())
 export const PushFileResponse = ResponseShaped(StatusShaped)
 export const GetFileResponse = PushFileResponse
 export const GetFileMetadataResponse = ResponseShaped(MetadataShaped)
 export const DeleteFileResponse = PushFileResponse
 export const GetFileNamesResponse = ResponseShaped(z.string().array())
-export const GetAllFilesResponse = ResponseShaped(FileNameShaped.extend(ContentShaped.shape))
-export const GetAllFileMetadataResponse = ResponseShaped(MetadataShaped.array())
+export const GetAllFilesResponse = ResponseShaped(
+    FileNameShaped.extend(ContentShaped.shape))
+export const GetAllFileMetadataResponse = ResponseShaped(
+    MetadataShaped.array())
 export const CalculateRamResponse = ResponseShaped(z.number())
 export const GetDefinitionFileResponse = ResponseShaped(z.string())
 export const GetSaveFileResponse = ResponseShaped(z.object({

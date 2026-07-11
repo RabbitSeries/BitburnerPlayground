@@ -6,7 +6,6 @@ import { Toolbar } from "./Pallates/Toolbar"
 import type { ProcessHandle } from "./OS/Process"
 import { TableHeader } from "./ServerTable/TableHeader"
 import { ScanAllServers } from "/Hack/HackHelpers"
-import { ServerTree } from "/AGC/ServerTree"
 import { Ratio } from "./Hack/Ratio"
 
 export default function HackOS({
@@ -22,7 +21,8 @@ export default function HackOS({
         RootAccessRank(ns).thenSortBy(CurrentMoneyRateRank(ns).compare)
     )
 
-    const [rows, setRows] = useState(servers.toSorted(ranker.compare).slice(0, 10))
+    const [rows, setRows] = useState(servers
+        .toSorted(ranker.compare).slice(0, 10))
     const [timer, setTimer] = useState(NaN)
     rows.sort(ranker.compare)
 
@@ -45,8 +45,7 @@ export default function HackOS({
                 ns={ns}
                 notifier={({ action }) =>
                     setRows(action === "Expand" ? ScanAllServers(ns).sorted :
-                        rows.slice(0, 10))
-                }
+                        rows.slice(0, 10))}
                 ranker={ranker.compare}
                 handle={{
                     close: () => {
@@ -73,7 +72,6 @@ export default function HackOS({
                     })}
                 </tbody>
             </table>
-            <ServerTree ns={ns} />
             <Ratio ns={ns} />
         </div>
     )

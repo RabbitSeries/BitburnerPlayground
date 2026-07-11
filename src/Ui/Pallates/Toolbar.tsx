@@ -123,8 +123,7 @@ export function Toolbar({
             <label
                 ref={levelTo}
                 onClick={async ({ currentTarget }) =>
-                    (currentTarget.textContent = `${Math.max(Math.min(+`${await ns.prompt("Upgrade to: ", { type: "text" })}`, 200), 0)}`)
-                }
+                    (currentTarget.textContent = `${Math.max(Math.min(+`${await ns.prompt("Upgrade to: ", { type: "text" })}`, 200), 0)}`)}
             >
                 {maxLevel}
             </label>
@@ -140,8 +139,7 @@ export function Toolbar({
                                 )
                             }
                         })
-                        .catch()
-                }
+                        .catch()}
             >
                 Find Path
             </button>
@@ -169,8 +167,7 @@ export function Toolbar({
                             .then(ns.prompt)
                             .catch(ns.prompt)
                     }
-                }
-                }
+                }}
             >
                 Purchase a server
             </button>
@@ -183,8 +180,7 @@ export function Toolbar({
                             FreeRam.bind(ns)("home") /
 							ns.getScriptRam(MinerPaths.MemSharer.scriptPath)
                         )
-                    ).run()
-                }
+                    ).run()}
             >
                 Share mem (HOME)
             </button>

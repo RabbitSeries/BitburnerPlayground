@@ -17,7 +17,7 @@ export function Ratio(props : {ns: NS}) {
 
     const [options] = useState(ScanAllServers(props.ns).sorted)
     // refs should be values that are no need of rendering
-    const launch = useCallback((target :string, ns : NS)=>{
+    const launch = useCallback((target :string, ns : NS) => {
         launchRatio(ns, [+hackSlider.current!.value,
             +weaken1Slider.current!.value,
             +growSlider.current!.value,
@@ -31,7 +31,7 @@ export function Ratio(props : {ns: NS}) {
             <input type="range" ref={weaken2Slider} />
         </div>
         <select ref={selectionRef}>{
-            options.map((value,i ) =>
+            options.map((value, i) =>
                 <option key={i} value={value}>{value}</option>)
         }</select>
         <button onClick={() =>

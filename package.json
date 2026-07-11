@@ -27,10 +27,11 @@
 	"scripts": {
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",
-		"lint": "tsc -b && eslint .",
 		"watch": "npm run watch:init  && npm run watch:watch",
 		"watch:init": "esbuild esbuild.ts ./ws/**/*.ts --tsconfig=tsconfig.external.json --format=esm --platform=node --outdir=dist/aux --sourcemap=inline",
-		"watch:watch": "node ./dist/aux/esbuild.js"
+		"watch:watch": "node ./dist/aux/esbuild.js",
+		"eslint:lint": "tsc -b && eslint",
+		"eslint:fix": "eslint --fix"
 	},
 	"type": "module",
 	"version": "0.1.0"

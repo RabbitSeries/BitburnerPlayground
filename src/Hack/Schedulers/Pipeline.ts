@@ -74,7 +74,7 @@ export async function Pipeline(
         const clock = Date.now()
         while (!stop_token.is_stop_requested()) {
             const now = Date.now()
-            let offset = (now - clock) % pSegTime //Launch at last task's finish time
+            let offset = (now - clock) % pSegTime // Launch at last task's finish time
             if (offset > flex) {
                 offset = pSegTime - offset
             } else {

@@ -29,14 +29,14 @@ export class Comparator<T> {
 
     public thenComparing(mapper: (a: T) => number) {
         // Make a copy instead of referencing `this` inside the closure.
-        return this.thenSortBy((a,b) => mapper(a) - mapper(b))
+        return this.thenSortBy((a, b) => mapper(a) - mapper(b))
     }
 
     public thenSortBy(sorter: Sorter<T>): Comparator<T> {
         const tag = this.reverseTag
         const currentSorter = this.currentSorter
-        return new Comparator([...this.sortChain, (a,b) =>
-            tag * currentSorter(a,b)], sorter)
+        return new Comparator([...this.sortChain, (a, b) =>
+            tag * currentSorter(a, b)], sorter)
     }
 
     public reversed(): Comparator<T> {

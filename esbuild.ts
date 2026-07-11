@@ -12,17 +12,18 @@ const reactPlugin: Plugin = {
                 path: args.path
             }
         })
-        build.onLoad({ filter: /^react(-dom)?$/, namespace: "react" }, (args) => {
-            if (args.path == "react") {
-                return {
-                    contents: "module.exports = React"
+        build.onLoad({ filter: /^react(-dom)?$/, namespace: "react" },
+            (args) => {
+                if (args.path == "react") {
+                    return {
+                        contents: "module.exports = React"
+                    }
+                } else {
+                    return {
+                        contents: "module.exports = ReactDOM"
+                    }
                 }
-            } else {
-                return {
-                    contents: "module.exports = ReactDOM"
-                }
-            }
-        })
+            })
     }
 }
 
@@ -31,7 +32,8 @@ const ctx = await context({
     entryPoints: glob.globSync(["./src/**/*"], {
         ignore: ["**/node_modules", "**/*.md"]
     }),
-    tsconfig: "./tsconfig.game.json", // https://esbuild.github.io/content-types/#tsconfig-json
+    // https://esbuild.github.io/content-types/#tsconfig-json
+    tsconfig: "./tsconfig.game.json",
     platform: "browser",
     format: "esm",
     plugins: [reactPlugin],

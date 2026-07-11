@@ -82,7 +82,7 @@ export function ProgressBar(config: {
             Reason id:
             <select ref={failedSelection}
                 onChange={onSelectChange}>
-                {...options.map((option, i) =>
+                {options.map((option, i) =>
                     <option key={`${i}`} value={option}>{option}</option>)}
             </select>
         </div>

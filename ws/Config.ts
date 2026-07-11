@@ -1,13 +1,17 @@
 export enum LoggingLevel {
-    Verbose,
-    Error
+    Off,
+    Error,
+    Warning,
+    Info,
+    Debug,
+    Verbose
 }
 
 export type Config = {
     playground: string
     port: number
     definitionFile: string
-    filters: Set<string>
+    filters: string[]
     pushAllOnStart: boolean
     servers: string[]
     refreshDefinitionFile: boolean
@@ -15,14 +19,18 @@ export type Config = {
     loggingLevel: number
 }
 
-export const config: Config = {
+export function defineConfig(c : Config){
+    return c
+}
+
+export default defineConfig({
     playground: "./dist/out",
     definitionFile: "./NetscriptDefinitions.d.ts",
     port: 12525,
-    filters: new Set([".js", ".txt"]),
+    filters: [".js", ".txt"],
     pushAllOnStart: true,
     servers: ["home"],
     refreshDefinitionFile: true,
     cleanServers: true,
     loggingLevel: LoggingLevel.Error
-}
+})

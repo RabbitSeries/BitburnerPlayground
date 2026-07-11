@@ -57,7 +57,7 @@ function ResponseShaped<T extends z.core.SomeType>(t: T) {
     ]))
 }
 
-const StatusShaped = z.literal("OK").optional()
+const StatusShaped = z.literal("OK")
 const MetadataShaped = FileNameShaped.extend({ atime: z.string(), btime: z.string(), mtime: z.string() })
 export const AnyResponse = ResponseShaped(z.any())
 export const PushFileResponse = ResponseShaped(StatusShaped)

@@ -1,5 +1,5 @@
 import WebSocket, { WebSocketServer } from "ws"
-import { config, LoggingLevel } from "./Config.js"
+import config, { LoggingLevel } from "./Config.js"
 import {
     DeleteFileResponse,
     GetDefinitionFileResponse,
@@ -16,6 +16,17 @@ import path from "node:path"
 import glob from "fast-glob"
 import { watch } from "chokidar"
 import { existsSync, rmSync } from "node:fs"
+import type z from "zod"
+
+type ResponseShaped = z.infer<typeof AnyResponse>
+
+function isResponseOK(r : ResponseShaped){
+    return "result" in r
+}
+
+function rString(r : ResponseShaped){
+    return `${isResponseOK(r) ? r.result: r.error}`
+}
 
 class Handler {
     private messageHandlers: Map<number, { handle: (json: object) => Promise<void>, method: string }> = new Map()
@@ -31,12 +42,20 @@ class Handler {
             const id = r.data!.id
             if (this.messageHandlers.has(id)) {
                 const { handle, method } = this.messageHandlers.get(id)!
-                await handle(obj).catch((reason) =>
-                    console.log(`Error when handling message ${{ json, id }} - ${reason}`)
+                await handle(obj).then(() =>{
+                    if(config.loggingLevel >= LoggingLevel.Info){
+                        console.log({ stat: "OK", id: r.data.id, method })
+                    }
+                }
+                ).catch((reason) =>
+                {
+                    if(config.loggingLevel >= LoggingLevel.Error){
+                        console.log(`Error when handling message ${{ json, id }} - ${reason}`)
+                    }
+                }
                 )
-                console.log({ stat: "OK", id: r.data.id, method })
             } else {
-                console.log(`Incomming message does not have a registered handler.`)
+                console.log('Incoming message does not have a registered handler.')
             }
         } else {
             console.log(`Failed to find id in incomming message ${json}.`)
@@ -50,11 +69,11 @@ class Handler {
 
 const handler = new Handler()
 let messageId = 0
-
+const filters = new Set(config.filters)
 const ingameFileName = (file: string) => path.relative(config.playground, file).replaceAll(/\\/g, "/")
 
 const validateFilenames = (filenames: string[]) =>
-    filenames.filter((name) => config.filters.has(path.extname(name)))
+    filenames.filter((name) => filters.has(path.extname(name)))
 
 async function iterateServers(func: (server: string) => void | Promise<void>) {
     for (const server of config.servers) {
@@ -62,7 +81,7 @@ async function iterateServers(func: (server: string) => void | Promise<void>) {
     }
 }
 
-export async function getDefinitionFile(socket: WebSocket) {
+export function getDefinitionFile(socket: WebSocket) {
     const defRequest: GetDefinitionFile = {
         jsonrpc: "2.0",
         id: messageId++,
@@ -70,14 +89,15 @@ export async function getDefinitionFile(socket: WebSocket) {
     }
     handler.setHandler(defRequest.id, defRequest.method, async (json) => {
         const definitionFile = GetDefinitionFileResponse.parse(json)
-        if ("result" in definitionFile && definitionFile.result) {
+        if (isResponseOK(definitionFile)) {
             await writeFile(config.definitionFile, definitionFile.result)
         }
     })
     socket.send(JSON.stringify(defRequest))
 }
 
-export async function pushFile(filename: string, socket: WebSocket, server: string) {
+export async function pushFile(filename: string, socket: WebSocket,
+    server: string) {
     const filePush: PushFile = {
         jsonrpc: "2.0",
         id: messageId++,
@@ -92,7 +112,7 @@ export async function pushFile(filename: string, socket: WebSocket, server: stri
         const pushResult = PushFileResponse.parse(json)
         if (config.loggingLevel <= LoggingLevel.Verbose) {
             console.log({
-                PushStat: `${"error" in pushResult ? `${pushResult.error}` : result}`,
+                PushStat: rString(pushResult),
                 file: filePush.params!.filename,
                 aka: filename,
                 server,
@@ -104,7 +124,7 @@ export async function pushFile(filename: string, socket: WebSocket, server: stri
 }
 
 export async function getFilenames(socket: WebSocket, server: string) {
-    const filenames = new Promise<string[]>((resolve, reject) => {
+    return new Promise<string[]>((resolve, reject) => {
         const filenamesRequest: GetFileNames = {
             jsonrpc: "2.0",
             id: messageId++,
@@ -120,19 +140,18 @@ export async function getFilenames(socket: WebSocket, server: string) {
             }
         }, 5000)
         handler.setHandler(filenamesRequest.id, filenamesRequest.method, async (json) => {
-            const { error, result } = GetFileNamesResponse.parse(json)
-            if (!error && result) {
-                return resolve(result)
+            const filenames = GetFileNamesResponse.parse(json)
+            if (isResponseOK(filenames)) {
+                return resolve(filenames.result)
             }
             reject("Failed")
             finished = true
         })
         socket.send(JSON.stringify(filenamesRequest))
     })
-    return filenames
 }
 
-export async function deleteFile(filename: string, socket: WebSocket, server: string) {
+export function deleteFile(filename: string, socket: WebSocket, server: string) {
     const fileDeletion: DeleteFile = {
         jsonrpc: "2.0",
         id: messageId++,
@@ -143,10 +162,10 @@ export async function deleteFile(filename: string, socket: WebSocket, server: st
         }
     }
     handler.setHandler(fileDeletion.id, fileDeletion.method, async (json) => {
-        const { error, result } = DeleteFileResponse.parse(json)
+        const deleteStat = DeleteFileResponse.parse(json)
         if (config.loggingLevel <= LoggingLevel.Verbose) {
             console.log({
-                DeleteStat: `${error ? `${error}:${result}` : result}`,
+                DeleteStat: rString(deleteStat),
                 file: fileDeletion.params!.filename,
                 server
             })
@@ -155,7 +174,7 @@ export async function deleteFile(filename: string, socket: WebSocket, server: st
     socket.send(JSON.stringify(fileDeletion))
 }
 
-export async function startWebsocketServer() {
+export function startWebsocketServer() {
     const server = new WebSocketServer({ port: config.port })
     server.on("connection", async (socket, message) => {
         const mBuf = message.read()
@@ -202,7 +221,7 @@ export async function startWebsocketServer() {
 function setupWatcher(socket: WebSocket) {
     const watcher = watch(config.playground)
     const addOrChange = (p: string) => {
-        if (!config.filters.has(path.extname(p))) {
+        if (!filters.has(path.extname(p))) {
             return
         }
         for (const server of config.servers) {
@@ -212,7 +231,7 @@ function setupWatcher(socket: WebSocket) {
     watcher.on("add", addOrChange)
     watcher.on("change", addOrChange)
     watcher.on("unlink", (p) => {
-        if (!config.filters.has(path.extname(p))) {
+        if (!filters.has(path.extname(p))) {
             return
         }
         for (const server of config.servers) {

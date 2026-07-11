@@ -21,17 +21,17 @@ export default function HackOS({
     const [ranker, setRanker] = useState(
         RootAccessRank(ns).thenSortBy(CurrentMoneyRateRank(ns).compare)
     )
-    const [rows, setRows] = useState(servers.sort(ranker.compare).slice(0, 10))
-    const timer = useRef<HTMLDivElement>(null)
-    const sorted = rows.toSorted(ranker.compare)
+
+    const [rows, setRows] = useState(servers.toSorted(ranker.compare).slice(0, 10))
+    const [timer, setTimer] = useState(NaN)
+    rows.sort(ranker.compare)
+
+    // refs are used for callbacks and effects
     const refreshHandle = useRef<number>(null)
+
     useEffect(() => {
-        // The return type should be number instead of NodeJS implemented NodeJS.Timeout.
         refreshHandle.current = setInterval(() => {
-            if (timer.current) {
-                timer.current.textContent = `${Math.floor(Date.now() / 1000) % 60}`
-            }
-            setRows([...rows])
+            setTimer(Math.floor(Date.now() / 1000) % 60)
         }, 1000)
         return () => {
             if (refreshHandle.current) clearInterval(refreshHandle.current)
@@ -40,12 +40,12 @@ export default function HackOS({
     return (
         <div className="multi-server-container">
             <h2>Network Server Information</h2>
-            <div ref={timer}>Nah</div>
+            <div>{timer}</div>
             <Toolbar
                 ns={ns}
                 notifier={({ action }) =>
                     setRows(action === "Expand" ? ScanAllServers(ns).sorted :
-                        sorted.slice(0, 10))
+                        rows.slice(0, 10))
                 }
                 ranker={ranker.compare}
                 handle={{
@@ -60,9 +60,10 @@ export default function HackOS({
             <table className="server-table">
                 <TableHeader ns={ns} setRanker={setRanker} />
                 <tbody>
-                    {sorted.map((host, rowId) => {
+                    {rows.map((host, rowId) => {
                         return (
                             <ServerInfo
+                                // Use host as key
                                 key={host}
                                 ns={ns}
                                 host={host}

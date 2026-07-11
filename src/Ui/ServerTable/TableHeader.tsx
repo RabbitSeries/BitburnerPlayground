@@ -1,24 +1,26 @@
 import type { NS } from "@ns"
-import React, { useCallback, useRef } from "react"
+import React, { useCallback, useRef} from "react"
 import { Comparator, CurrentMoneyRateRank, HackLevelRank, HackTimeRank, MaxMoneyRank, PotentialMoneyRank, RootAccessRank, SecurityLevelRank } from "/utils/Comparators"
 import type { TableHeaderMeta } from "./TableHeaderMeta"
 
 export function TableHeader({ ns, setRanker }: { ns: NS, setRanker: (ranker: Comparator<string>) => void }) {
-    const clickTimeOut = useRef<number>(null)
+    const clickTimeout = useRef<number>(null)
     const handleClick = useCallback((comparator: Comparator<string>) => {
         return new Promise<Comparator<string>>((resolve, reject) => {
-            if (clickTimeOut.current) {
-                clickTimeOut.current = null
+            if (clickTimeout.current !== null) {
+                // Double clicked within timeout
+                clickTimeout.current = null
                 resolve(comparator.reversed())
             } else {
-                clickTimeOut.current = setTimeout(() => {
-                    if (clickTimeOut.current === null) {
-                        reject("Double clicked or clicked status lost")
+                clickTimeout.current = setTimeout(() => {
+                    // Single click timeout check
+                    if (clickTimeout.current === null) {
+                        reject("Double clicked or clicked status lost.")
                     } else {
                         resolve(comparator)
+                        clickTimeout.current = null
                     }
-                    clickTimeOut.current = null
-                }, 200)
+                }, 200) // Double click timeout gap
             }
         })
     }, [])

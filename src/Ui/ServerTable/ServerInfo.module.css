@@ -1,0 +1,105 @@
+/* TableRow.module.css */
+
+/* ===== 基础行 ===== */
+.row {
+  display: table-row;
+  background-color: #ffffff;
+  border-bottom: 1px solid #edf2f7;
+  transition: background-color 0.2s ease;
+}
+
+/* ===== 单元格 ===== */
+.cell {
+  padding: 12px 16px;
+  color: #2d3748;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+/* ===== 斑马条纹 ===== */
+.rowStriped:nth-child(even) {
+  background-color: #f7fafc;
+}
+
+/* ===== 悬停效果 ===== */
+.rowHover:hover {
+  background-color: #f0f4ff;
+  cursor: pointer;
+}
+
+/* ===== 选中状态 ===== */
+.rowSelected {
+  background-color: #ebf0ff !important;
+  border-left: 3px solid #4f7cff;
+}
+
+.rowSelected .cell:first-child {
+  padding-left: 13px;
+}
+
+/* ===== 禁用状态 ===== */
+.rowDisabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* ===== 紧凑模式 ===== */
+.rowCompact .cell {
+  padding: 8px 12px;
+}
+
+/* ===== 状态徽章 ===== */
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.badgeActive {
+  background: #def7ec;
+  color: #03543f;
+}
+
+.badgeInactive {
+  background: #fde8e8;
+  color: #9b1c1c;
+}
+
+.badgePending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* ===== 操作按钮 ===== */
+.actionBtn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-right: 6px;
+}
+
+.actionBtnEdit {
+  background: #e8edff;
+  color: #4a6cf7;
+}
+
+.actionBtnEdit:hover {
+  background: #d0dbff;
+  transform: translateY(-1px);
+}
+
+.actionBtnDelete {
+  background: #fee8e8;
+  color: #e53e3e;
+}
+
+.actionBtnDelete:hover {
+  background: #fed0d0;
+  transform: translateY(-1px);
+}

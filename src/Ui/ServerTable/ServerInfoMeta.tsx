@@ -37,11 +37,17 @@ export interface ExtendedServer extends Server {
 //     growTime: "Grow Time"
 // } as const satisfies Record<keyof Required<ExtendedServer>, string>
 
-// export function displayLabel<T extends keyof ExtendedServer>(property: T): (typeof InfoDisplay)[T] {
+// export function displayLabel<T extends keyof ExtendedServer>(property: T):
+//  (typeof InfoDisplay)[T] {
 //     return InfoDisplay[property]
 // }
 
 export function serverInfo(ns: NS, hostname: string): ExtendedServer {
     const server = ns.getServer(hostname)
-    return { ...server, hackTime: ns.getHackTime(hostname), weakenTime: ns.getWeakenTime(hostname), growTime: ns.getGrowTime(hostname) }
+    return {
+        ...server,
+        hackTime: ns.getHackTime(hostname),
+        weakenTime: ns.getWeakenTime(hostname),
+        growTime: ns.getGrowTime(hostname)
+    }
 }
